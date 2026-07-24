@@ -24,11 +24,13 @@ jobs:
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.11.1'
 
-      - name: Grant Execute Permission for Gradlew
+      - name: Ensure Gradlew Executable
         run: |
           if [ ! -f ./gradlew ]; then
-            gradle wrapper
+            gradle wrapper --gradle-version 8.11.1
           fi
           chmod +x ./gradlew
 
