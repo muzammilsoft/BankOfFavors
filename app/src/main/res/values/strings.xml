@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Favors Bank</string>
+    <string name="en_name">Favors Bank</string>
+    <string name="loading">Pretty Patience</string>
+    <string name="tasks">Tasks</string>
+    <string name="atcions">Actions</string>
+    <string name="review">Review</string>
+    <string name="share">Share</string>
+    <string name="my_account">My Account</string>
+    <string name="login">Login</string>
+    <string name="un_necessary_step">Unnecessary Step you can skip it anyway </string>
+    <string name="username">Name</string>
+    <string name="username_hint">Username </string>
+    <string name="password">Password</string>
+    <string name="password_hint">Password... </string>
+    <string name="dont_show_again">Do not show this again</string>
+    <string name="skip">Skip» </string>
+</resources>

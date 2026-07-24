@@ -1,0 +1,6 @@
+{
+  "name": "بنك الحسنات - Favors Bank",
+  "description": "تطبيق بنك الحسنات للأذكار والأعمال اليومية والتسبيح والصلاة بلغة Kotlin",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
