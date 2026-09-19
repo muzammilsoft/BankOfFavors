@@ -1,6 +1,5 @@
 package com.kgsoft.favorsbank.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -34,7 +33,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -93,9 +94,10 @@ fun TodoScreen(navController: NavController, prefs: PrefsRepository, initialTab:
                 onClick = { tab = 0 },
                 text = { Text(Strings.tasks, fontFamily = Tajwal) },
                 icon = {
-                    Image(
-                        painterResource(R.drawable.tasks_icon),
+                    Icon(
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_tasks),
                         contentDescription = null,
+                        tint = GreenPrimary,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -105,9 +107,10 @@ fun TodoScreen(navController: NavController, prefs: PrefsRepository, initialTab:
                 onClick = { tab = 1 },
                 text = { Text(Strings.business, fontFamily = Tajwal) },
                 icon = {
-                    Image(
-                        painterResource(R.drawable.business_icon),
+                    Icon(
+                        imageVector = ImageVector.vectorResource(R.drawable.ic_business),
                         contentDescription = null,
+                        tint = GreenPrimary,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -126,7 +129,6 @@ fun TodoScreen(navController: NavController, prefs: PrefsRepository, initialTab:
                                 details = m.details,
                                 earnings = m.earnings,
                                 mission = m.mission,
-                                bonus = 30,
                                 isJob = false,
                                 job = m.mission
                             )
@@ -161,7 +163,6 @@ fun TodoScreen(navController: NavController, prefs: PrefsRepository, initialTab:
                                     details = j.details,
                                     earnings = j.earnings,
                                     mission = j.mission,
-                                    bonus = 50,
                                     isJob = true,
                                     job = j.mission
                                 )

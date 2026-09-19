@@ -9,7 +9,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -17,11 +16,13 @@ import com.kgsoft.favorsbank.R
 import com.kgsoft.favorsbank.data.PrefsRepository
 import com.kgsoft.favorsbank.data.firstValue
 import com.kgsoft.favorsbank.ui.Routes
+import com.kgsoft.favorsbank.ui.theme.GreenPrimary
 import kotlinx.coroutines.delay
 
 /**
- * Launch screen. After 2s: if the user checked "don't show again" the login
- * is skipped and we go straight home, mirroring SplashActivity.
+ * Launch screen: green background with the small app logo centered.
+ * After 2s: if the user checked "don't show again" the login is skipped
+ * and we go straight home.
  */
 @Composable
 fun SplashScreen(navController: NavController, prefs: PrefsRepository) {
@@ -35,13 +36,13 @@ fun SplashScreen(navController: NavController, prefs: PrefsRepository) {
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color.White),
+            .background(GreenPrimary),
         contentAlignment = Alignment.Center
     ) {
         Image(
             painter = painterResource(R.drawable.logo),
             contentDescription = null,
-            modifier = Modifier.size(180.dp)
+            modifier = Modifier.size(120.dp)
         )
     }
 }

@@ -59,7 +59,6 @@ data class DetailsPayload(
     val details: String,
     val earnings: String,
     val mission: String,
-    val bonus: Long,
     val isJob: Boolean,
     val job: String
 )
@@ -93,7 +92,7 @@ fun BankApp(prefs: PrefsRepository, startRoute: String = Routes.SPLASH) {
             composable(Routes.SPLASH) { SplashScreen(navController, prefs) }
             composable(Routes.LOGIN) { LoginScreen(navController, prefs) }
             composable(Routes.HOME) { HomeScreen(navController, prefs) }
-            composable(Routes.SALAT) { SalatTimesScreen(navController) }
+            composable(Routes.SALAT) { SalatTimesScreen(navController, prefs) }
             composable(Routes.AZKAR) { DaynightAzkarScreen(navController) }
             composable(
                 Routes.SIBHA,

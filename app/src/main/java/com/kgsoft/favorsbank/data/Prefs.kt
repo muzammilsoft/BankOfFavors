@@ -9,6 +9,12 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Replaces the Sketchware-era SharedPreferences files ("profile", "settings",
@@ -19,6 +25,8 @@ private val Context.profileStore: DataStore<Preferences> by preferencesDataStore
 private val Context.settingsStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
 private val Context.themeStore: DataStore<Preferences> by preferencesDataStore(name = "theme")
 private val Context.archivesStore: DataStore<Preferences> by preferencesDataStore(name = "archives")
+private val Context.prayerStore: DataStore<Preferences> by preferencesDataStore(name = "prayer")
+private val Context.completedStore: DataStore<Preferences> by preferencesDataStore(name = "completed")
 
 object PrefKeys {
     // profile
@@ -34,7 +42,24 @@ object PrefKeys {
     val TOASTS = stringPreferencesKey("toasts")
     // theme
     val THEME = stringPreferencesKey("theme")
+    // prayer
+    val PRAYER_LAT = stringPreferencesKey("lat")
+    val PRAYER_LNG = stringPreferencesKey("lng")
+    val PRAYER_DATE = stringPreferencesKey("date")
+    val PRAYER_JSON = stringPreferencesKey("timings")
+    // completed log
+    val COMPLETED_LOG = stringPreferencesKey("log")
 }
+
+/** One completed task entry: title, completion date (yyyy-MM-dd) and hasanat earned. */
+@Serializable
+data class CompletedTask(
+    val title: String = "",
+    val date: String = "",
+    val hasanat: Long = 0L
+)
+
+private val logJson = Json { ignoreUnknownKeys = true }
 
 class PrefsRepository(private val context: Context) {
 
@@ -103,6 +128,51 @@ class PrefsRepository(private val context: Context) {
 
     fun isFavorite(id: String): Flow<Boolean> =
         context.archivesStore.data.map { it[stringPreferencesKey(id)] != null }
+
+    // ---------- prayer times ----------
+    val prayerLat: Flow<Double?> =
+        context.prayerStore.data.map { it[PrefKeys.PRAYER_LAT]?.toDoubleOrNull() }
+    val prayerLng: Flow<Double?> =
+        context.prayerStore.data.map { it[PrefKeys.PRAYER_LNG]?.toDoubleOrNull() }
+    val cachedPrayerDate: Flow<String?> =
+        context.prayerStore.data.map { it[PrefKeys.PRAYER_DATE] }
+    val cachedPrayerJson: Flow<String?> =
+        context.prayerStore.data.map { it[PrefKeys.PRAYER_JSON] }
+
+    suspend fun savePrayerLocation(lat: Double, lng: Double) =
+        context.prayerStore.edit {
+            it[PrefKeys.PRAYER_LAT] = lat.toString()
+            it[PrefKeys.PRAYER_LNG] = lng.toString()
+        }
+
+    suspend fun cachePrayerTimes(date: String, json: String) =
+        context.prayerStore.edit {
+            it[PrefKeys.PRAYER_DATE] = date
+            it[PrefKeys.PRAYER_JSON] = json
+        }
+
+    // ---------- completed tasks log ----------
+    val completedLog: Flow<List<CompletedTask>> =
+        context.completedStore.data.map { prefs ->
+            val raw = prefs[PrefKeys.COMPLETED_LOG] ?: return@map emptyList()
+            runCatching {
+                logJson.decodeFromString(ListSerializer(CompletedTask.serializer()), raw)
+            }.getOrDefault(emptyList())
+        }
+
+    /** Appends a completed task with today's date (newest first, capped at 500). */
+    suspend fun logCompletion(title: String, hasanat: Long) {
+        val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+        context.completedStore.edit { prefs ->
+            val raw = prefs[PrefKeys.COMPLETED_LOG]
+            val current = if (raw != null) runCatching {
+                logJson.decodeFromString(ListSerializer(CompletedTask.serializer()), raw)
+            }.getOrDefault(emptyList()) else emptyList()
+            val updated = (listOf(CompletedTask(title, today, hasanat)) + current).take(500)
+            prefs[PrefKeys.COMPLETED_LOG] =
+                logJson.encodeToString(ListSerializer(CompletedTask.serializer()), updated)
+        }
+    }
 }
 
 /** One-shot read helper for places that need a plain value instead of a Flow. */

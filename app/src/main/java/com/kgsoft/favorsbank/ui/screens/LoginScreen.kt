@@ -19,8 +19,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,7 +34,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.IntOffset
@@ -50,6 +51,9 @@ import kotlin.math.roundToInt
 /**
  * Login screen. Login is optional (it can be skipped); credentials are stored
  * in the "profile" DataStore, like the original LoginActivity.
+ *
+ * Design: green card with solid white input fields (dark text) so the form
+ * stays high-contrast and readable on the green background.
  */
 @Composable
 fun LoginScreen(navController: NavController, prefs: PrefsRepository) {
@@ -69,6 +73,19 @@ fun LoginScreen(navController: NavController, prefs: PrefsRepository) {
             popUpTo(Routes.LOGIN) { inclusive = true }
         }
     }
+
+    val fieldColors = OutlinedTextFieldDefaults.colors(
+        focusedContainerColor = Color.White,
+        unfocusedContainerColor = Color.White,
+        disabledContainerColor = Color.White,
+        focusedTextColor = Color(0xFF1A1A1A),
+        unfocusedTextColor = Color(0xFF1A1A1A),
+        cursorColor = GreenPrimary,
+        focusedLabelColor = GreenPrimary,
+        unfocusedLabelColor = GreenPrimary.copy(alpha = 0.8f),
+        focusedBorderColor = Color.White,
+        unfocusedBorderColor = Color.White.copy(alpha = 0.7f)
+    )
 
     Column(
         modifier = Modifier
@@ -108,19 +125,21 @@ fun LoginScreen(navController: NavController, prefs: PrefsRepository) {
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = { Text(Strings.username, fontFamily = Tajwal, color = Color.White) },
+                    label = { Text(Strings.username, fontFamily = Tajwal) },
                     singleLine = true,
                     shape = RoundedCornerShape(50),
+                    colors = fieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(12.dp))
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text(Strings.password, fontFamily = Tajwal, color = Color.White) },
+                    label = { Text(Strings.password, fontFamily = Tajwal) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     shape = RoundedCornerShape(50),
+                    colors = fieldColors,
                     modifier = Modifier.fillMaxWidth()
                 )
                 Spacer(Modifier.height(16.dp))
@@ -143,7 +162,15 @@ fun LoginScreen(navController: NavController, prefs: PrefsRepository) {
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.clickable { dontShowAgain = !dontShowAgain }
                 ) {
-                    Checkbox(checked = dontShowAgain, onCheckedChange = { dontShowAgain = it })
+                    Checkbox(
+                        checked = dontShowAgain,
+                        onCheckedChange = { dontShowAgain = it },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = Color.White,
+                            checkmarkColor = GreenPrimary,
+                            uncheckedColor = Color.White
+                        )
+                    )
                     Text(Strings.dontShowAgain, fontFamily = Tajwal, color = Color.White, fontSize = 14.sp)
                 }
             }

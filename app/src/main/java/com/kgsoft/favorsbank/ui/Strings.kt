@@ -125,6 +125,22 @@ object Strings {
     val asr get() = s("العصر", "Asr")
     val maghrib get() = s("المغرب", "Maghrib")
     val isha get() = s("العشاء", "Isha")
+    val nextPrayer get() = s("الصلاة القادمة", "Next prayer")
+    val remainingTime get() = s("المتبقي", "Remaining")
+    val locationTitle get() = s("تحديد الموقع", "Set location")
+    val locationMessage get() = s(
+        "نحتاج إلى موقعك مرة واحدة فقط لحساب مواقيت الصلاة بدقة حسب مدينتك.",
+        "We need your location once to calculate accurate prayer times for your city."
+    )
+    val useMyLocation get() = s("استخدام موقعي", "Use my location")
+    val useKhartoum get() = s("الخرطوم (افتراضي)", "Khartoum (default)")
+
+    // completed tasks log
+    val completedLog get() = s("سجل المهام المنجزة", "Completed tasks log")
+    val noCompletedTasks get() = s("لا توجد مهام منجزة بعد", "No completed tasks yet")
+    val hasanatAdded get() = s("أُضيفت إلى رصيدك", "added to your balance")
+    val blessedWithCount get() = s("بارك الله فيك! حصلت على", "Bless you! You earned")
+    val mayAllahAccept get() = s("تقبل الله طاعتك", "May Allah accept your worship")
 
     val aboutText get() = s(
         "بنك الحسنات تطبيق إسلامي يساعدك على استثمار وقتك في الطاعات وجمع الحسنات: مهام وأعمال مقترحة بالأجر والدليل، محاسبة يومية للنفس، أذكار الصباح والمساء، سبحة إلكترونية، ومواقيت الصلاة. شارك التطبيق واجعله صدقة جارية في ميزان حسناتك.",

@@ -4,4 +4,5 @@
     <color name="green_bright">#01B276</color>
     <color name="dark_bg">#263238</color>
     <color name="red_nope">#C62828</color>
+    <color name="ic_launcher_background">#00B276</color>
 </resources>

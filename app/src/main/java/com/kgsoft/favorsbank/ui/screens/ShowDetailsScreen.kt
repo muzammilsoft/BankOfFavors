@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.kgsoft.favorsbank.R
 import com.kgsoft.favorsbank.data.PrefsRepository
+import com.kgsoft.favorsbank.data.HasanatCalc
 import com.kgsoft.favorsbank.ui.DetailsStore
 import com.kgsoft.favorsbank.ui.Routes
 import com.kgsoft.favorsbank.ui.Strings
@@ -221,9 +222,17 @@ fun ShowDetailsScreen(navController: NavController, prefs: PrefsRepository) {
                 TextButton(onClick = {
                     showConfirm = false
                     scope.launch {
-                        prefs.setBonus(payload.bonus.toString())
-                        prefs.addHasanat(payload.bonus)
-                        context.toast("${Strings.blessedMsg}${payload.earnings}")
+                        // Hasanat comes from the number shown in the task's own
+                        // reward text — never an invented default.
+                        val amount = HasanatCalc.extract(payload.earnings)
+                        prefs.setBonus(amount.toString())
+                        prefs.addHasanat(amount)
+                        prefs.logCompletion(payload.title, amount)
+                        context.toast(
+                            if (amount > 0)
+                                "${Strings.blessedWithCount} $amount ${Strings.hasanatSuffix}"
+                            else Strings.mayAllahAccept
+                        )
                     }
                 }) {
                     Text(Strings.yesOfCourse, fontFamily = Tajwal, color = GreenPrimary)

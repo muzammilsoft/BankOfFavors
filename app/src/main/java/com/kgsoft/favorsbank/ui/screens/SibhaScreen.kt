@@ -1,6 +1,5 @@
 package com.kgsoft.favorsbank.ui.screens
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -36,8 +35,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
@@ -113,9 +114,10 @@ fun SibhaScreen(navController: NavController, initialZikr: String? = null) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Image(
-                painterResource(R.drawable.sibha_icon),
+            Icon(
+                imageVector = ImageVector.vectorResource(R.drawable.ic_sibha),
                 contentDescription = null,
+                tint = GreenPrimary,
                 modifier = Modifier.size(96.dp)
             )
             Spacer(Modifier.height(16.dp))

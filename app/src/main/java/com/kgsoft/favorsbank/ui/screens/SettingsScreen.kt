@@ -7,6 +7,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -16,7 +17,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Card
@@ -41,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -71,6 +75,7 @@ fun SettingsScreen(navController: NavController, prefs: PrefsRepository) {
     val notificationsOn by prefs.notificationsEnabled.collectAsState(initial = false)
     val darkTheme by prefs.isDarkTheme.collectAsState(initial = false)
     val toastsOn by prefs.toastsEnabled.collectAsState(initial = false)
+    val completedLog by prefs.completedLog.collectAsState(initial = emptyList())
 
     var toastTasbih by remember { mutableStateOf(true) }
     var toastProphet by remember { mutableStateOf(false) }
@@ -121,7 +126,11 @@ fun SettingsScreen(navController: NavController, prefs: PrefsRepository) {
             Text(Strings.settings, fontFamily = Tajwal, fontWeight = FontWeight.Bold, fontSize = 20.sp)
         }
 
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+        ) {
             SettingRow(
                 title = Strings.notifications,
                 subtitle = if (notificationsOn) Strings.enabled else Strings.disabled,
@@ -204,6 +213,70 @@ fun SettingsScreen(navController: NavController, prefs: PrefsRepository) {
                         fontWeight = FontWeight.Bold,
                         fontSize = 16.sp
                     )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // Completed tasks log with dates.
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(2.dp),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        Strings.completedLog,
+                        fontFamily = Tajwal,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        color = GreenPrimary
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    if (completedLog.isEmpty()) {
+                        Text(
+                            Strings.noCompletedTasks,
+                            fontFamily = Tajwal,
+                            fontSize = 14.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    } else {
+                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            completedLog.forEach { entry ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.fillMaxWidth()
+                                ) {
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text(
+                                            entry.title,
+                                            fontFamily = Tajwal,
+                                            fontWeight = FontWeight.Bold,
+                                            fontSize = 14.sp,
+                                            maxLines = 2
+                                        )
+                                        Text(
+                                            entry.date,
+                                            fontFamily = Tajwal,
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                        )
+                                    }
+                                    Spacer(Modifier.width(8.dp))
+                                    Text(
+                                        "+${entry.hasanat}",
+                                        fontFamily = Tajwal,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 14.sp,
+                                        color = GreenPrimary
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

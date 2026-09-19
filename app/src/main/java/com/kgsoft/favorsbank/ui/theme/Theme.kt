@@ -5,6 +5,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -14,6 +15,17 @@ val GreenPrimary = Color(0xFF00B276)
 val GreenBright = Color(0xFF01B276)
 val DarkBg = Color(0xFF263238)
 val NopeRed = Color(0xFFC62828)
+
+/**
+ * "Grain ear" (سنبلة) corner style: two rounded diagonal corners, two sharp —
+ * the app's identity shape used for home cards and prayer rows.
+ */
+val GrainShape = RoundedCornerShape(
+    topStart = 18.dp,
+    topEnd = 0.dp,
+    bottomEnd = 18.dp,
+    bottomStart = 0.dp
+)
 
 val Tajwal = FontFamily(
     Font(R.font.tajwal, FontWeight.Normal),
