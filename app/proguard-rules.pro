@@ -1,4 +1,1 @@
--repackageclasses
--ignorewarnings
--dontwarn
--dontnote
+# Add project specific ProGuard rules here.

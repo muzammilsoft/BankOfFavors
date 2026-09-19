@@ -1,187 +1,222 @@
 package com.kgsoft.favorsbank.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.EmojiEvents
-import androidx.compose.material.icons.filled.Person
-import androidx.compose.material.icons.filled.Star
-import androidx.compose.material3.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kgsoft.favorsbank.data.FavorsRepository
-import com.kgsoft.favorsbank.ui.theme.EmeraldGreen
-import com.kgsoft.favorsbank.ui.theme.GoldAccent
+import androidx.navigation.NavController
+import com.kgsoft.favorsbank.R
+import com.kgsoft.favorsbank.data.PrefsRepository
+import com.kgsoft.favorsbank.ui.Strings
+import com.kgsoft.favorsbank.ui.theme.GreenPrimary
+import com.kgsoft.favorsbank.ui.theme.Tajwal
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Profile screen: avatar, name, hasanat balance and editable credentials.
+ * Mirrors MyAccountActivity.
+ */
 @Composable
-fun MyAccountScreen(
-    repository: FavorsRepository,
-    onBack: () -> Unit
-) {
-    val profile = remember { repository.getUserProfile() }
+fun MyAccountScreen(navController: NavController, prefs: PrefsRepository) {
+    val scope = rememberCoroutineScope()
+    val username by prefs.username.collectAsState(initial = null)
+    val password by prefs.password.collectAsState(initial = null)
+    val hasanat by prefs.hasanat.collectAsState(initial = 0L)
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("حسابي والإحصائيات 👤", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "رجوع")
-                    }
-                }
+    var editing by remember { mutableStateOf(false) }
+    var nameInput by remember(username) { mutableStateOf(username ?: "") }
+    var passInput by remember(password) { mutableStateOf(password ?: "") }
+
+    val displayName = username?.takeIf { it.isNotBlank() } ?: "عبدالله"
+    val displayPass = password?.takeIf { it.isNotBlank() } ?: "بسم الله"
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 4.dp, top = 8.dp, end = 16.dp)
+        ) {
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = GreenPrimary)
+            }
+            Text(
+                Strings.myAccount,
+                fontFamily = Tajwal,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                modifier = Modifier.weight(1f)
             )
+            IconButton(onClick = { editing = !editing }) {
+                Icon(
+                    painterResource(R.drawable.edit),
+                    contentDescription = null,
+                    tint = GreenPrimary,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
-    ) { paddingValues ->
+
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Profile Header
-            Surface(
-                shape = CircleShape,
-                color = EmeraldGreen,
-                modifier = Modifier.size(80.dp)
+            Image(
+                painterResource(R.drawable.default_profile_pic),
+                contentDescription = null,
+                modifier = Modifier
+                    .size(110.dp)
+                    .clip(CircleShape)
+            )
+            Spacer(Modifier.height(8.dp))
+            Text(
+                displayName,
+                fontFamily = Tajwal,
+                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp
+            )
+            Spacer(Modifier.height(16.dp))
+
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = GreenPrimary),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Box(contentAlignment = Alignment.Center) {
-                    Icon(
-                        Icons.Default.Person,
-                        contentDescription = null,
-                        tint = GoldAccent,
-                        modifier = Modifier.size(48.dp)
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        Strings.balance,
+                        fontFamily = Tajwal,
+                        color = Color.White.copy(alpha = 0.85f),
+                        fontSize = 14.sp
+                    )
+                    Text(
+                        "$hasanat ${Strings.hasanatSuffix}",
+                        fontFamily = Tajwal,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 28.sp,
+                        color = Color.White
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(12.dp))
+            Spacer(Modifier.height(16.dp))
 
-            Text(
-                text = profile.name,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Surface(
+            Card(
                 shape = RoundedCornerShape(20.dp),
-                color = GoldAccent.copy(alpha = 0.2f),
-                modifier = Modifier.padding(top = 6.dp)
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(2.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = profile.rankTitle,
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp)
-                )
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            // Stat Cards Grid
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("سجل الإنجازات المباركة", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        StatItem("رصيد الحسنات", "${profile.totalHasanat}", EmeraldGreen)
-                        StatItem("الأذكار المكتملة", "${profile.azkarCompletedCount}", GoldAccent)
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        StatItem("الأعمال المنجزة", "${profile.tasksCompletedCount}", Color(0xFF1565C0))
-                        StatItem("التسبيحات الكلية", "${profile.tasbeehTotalCount}", Color(0xFF8E24AA))
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Text(
+                        Strings.accountDetails,
+                        fontFamily = Tajwal,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 17.sp,
+                        color = GreenPrimary
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    if (editing) {
+                        OutlinedTextField(
+                            value = nameInput,
+                            onValueChange = { nameInput = it },
+                            label = { Text(Strings.username, fontFamily = Tajwal) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = passInput,
+                            onValueChange = { passInput = it },
+                            label = { Text(Strings.password, fontFamily = Tajwal) },
+                            visualTransformation = PasswordVisualTransformation(),
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp)
+                        )
+                        Spacer(Modifier.height(12.dp))
+                        Button(
+                            onClick = {
+                                scope.launch {
+                                    prefs.setUsername(nameInput)
+                                    prefs.setPassword(passInput)
+                                    editing = false
+                                }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(50),
+                            colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary)
+                        ) {
+                            Text(Strings.save, fontFamily = Tajwal, color = Color.White)
+                        }
+                    } else {
+                        AccountRow(Strings.username, displayName)
+                        Spacer(Modifier.height(8.dp))
+                        AccountRow(Strings.password, displayPass)
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // Badges Card
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("أوسمة الإيمان 🏅", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    BadgeRow("وسام الأذكار", "قمت بختم الأذكار عدة مرات", profile.azkarCompletedCount > 0)
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                    BadgeRow("وسام التسبيح", "سجلت أكثر من 100 تسبيحة", profile.tasbeehTotalCount >= 100)
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                    BadgeRow("وسام سابق بالخيرات", "جمعت أكثر من 1000 حسنة", profile.totalHasanat >= 1000)
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun StatItem(title: String, value: String, color: Color) {
-    Column(
-        modifier = Modifier.width(140.dp),
-        horizontalAlignment = Alignment.Start
-    ) {
-        Text(title, fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = color)
-    }
-}
-
-@Composable
-fun BadgeRow(title: String, desc: String, isUnlocked: Boolean) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                Icons.Default.EmojiEvents,
-                contentDescription = null,
-                tint = if (isUnlocked) GoldAccent else Color.Gray,
-                modifier = Modifier.size(28.dp)
+            Spacer(Modifier.height(16.dp))
+            Text(
+                "حافظ على حسناتك بالمداومة على الطاعات، وتذكر أن القليل الدائم خير من الكثير المنقطع.",
+                fontFamily = Tajwal,
+                fontSize = 14.sp,
+                textAlign = TextAlign.Center,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                modifier = Modifier.padding(horizontal = 8.dp)
             )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(title, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                Text(desc, fontSize = 11.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
         }
+    }
+}
+
+@Composable
+private fun AccountRow(label: String, value: String) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Text(
-            text = if (isUnlocked) "مفتوح ✅" else "مغلق 🔒",
-            fontSize = 12.sp,
-            color = if (isUnlocked) EmeraldGreen else Color.Gray,
-            fontWeight = FontWeight.Bold
+            label,
+            fontFamily = Tajwal,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+            modifier = Modifier.weight(1f)
         )
+        Text(value, fontFamily = Tajwal, fontWeight = FontWeight.Bold, fontSize = 16.sp)
     }
 }

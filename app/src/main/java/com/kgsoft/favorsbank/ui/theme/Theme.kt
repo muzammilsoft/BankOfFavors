@@ -1,70 +1,73 @@
 package com.kgsoft.favorsbank.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
+import com.kgsoft.favorsbank.R
 
-val EmeraldGreen = Color(0xFF0F5132)
-val LightEmerald = Color(0xFF198754)
-val DarkEmerald = Color(0xFF0A3622)
-val GoldAccent = Color(0xFFD4AF37)
-val LightGold = Color(0xFFF3E5AB)
-val WarmBackground = Color(0xFFF8F9FA)
-val SurfaceCard = Color(0xFFFFFFFF)
-val TextPrimary = Color(0xFF1C1D1F)
-val TextSecondary = Color(0xFF5A6268)
+val GreenPrimary = Color(0xFF00B276)
+val GreenBright = Color(0xFF01B276)
+val DarkBg = Color(0xFF263238)
+val NopeRed = Color(0xFFC62828)
 
-val DarkBackground = Color(0xFF121814)
-val DarkSurfaceCard = Color(0xFF1E2620)
-val DarkTextPrimary = Color(0xFFECEFF1)
-val DarkTextSecondary = Color(0xFFB0BEC5)
+val Tajwal = FontFamily(
+    Font(R.font.tajwal, FontWeight.Normal),
+    Font(R.font.tajwal, FontWeight.Bold)
+)
+val QuranFont = FontFamily(
+    Font(R.font.quran, FontWeight.Normal),
+    Font(R.font.quran, FontWeight.Bold)
+)
 
 private val LightColors = lightColorScheme(
-    primary = EmeraldGreen,
+    primary = GreenPrimary,
     onPrimary = Color.White,
-    primaryContainer = LightEmerald.copy(alpha = 0.15f),
-    onPrimaryContainer = DarkEmerald,
-    secondary = GoldAccent,
-    onSecondary = Color.Black,
-    secondaryContainer = LightGold.copy(alpha = 0.3f),
-    onSecondaryContainer = Color(0xFF5C4900),
-    background = WarmBackground,
-    onBackground = TextPrimary,
-    surface = SurfaceCard,
-    onSurface = TextPrimary,
-    surfaceVariant = Color(0xFFEFEFEF),
-    onSurfaceVariant = TextSecondary
+    secondary = GreenBright,
+    background = Color.White,
+    surface = Color.White,
+    onBackground = Color(0xFF1A1A1A),
+    onSurface = Color(0xFF1A1A1A)
 )
 
 private val DarkColors = darkColorScheme(
-    primary = LightEmerald,
+    primary = GreenPrimary,
     onPrimary = Color.White,
-    primaryContainer = DarkEmerald,
-    onPrimaryContainer = Color.White,
-    secondary = GoldAccent,
-    onSecondary = Color.Black,
-    secondaryContainer = Color(0xFF332A00),
-    onSecondaryContainer = LightGold,
-    background = DarkBackground,
-    onBackground = DarkTextPrimary,
-    surface = DarkSurfaceCard,
-    onSurface = DarkTextPrimary,
-    surfaceVariant = Color(0xFF28322B),
-    onSurfaceVariant = DarkTextSecondary
+    secondary = GreenBright,
+    background = DarkBg,
+    surface = DarkBg,
+    onBackground = Color.White,
+    onSurface = Color.White
 )
 
 @Composable
-fun FavorsBankTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+fun BankOfHasanatTheme(
+    darkTheme: Boolean,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = if (darkTheme) DarkColors else LightColors
-
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = if (darkTheme) DarkColors else LightColors,
+        typography = MaterialTheme.typography.copy(
+            displayLarge = MaterialTheme.typography.displayLarge.copy(fontFamily = Tajwal),
+            displayMedium = MaterialTheme.typography.displayMedium.copy(fontFamily = Tajwal),
+            displaySmall = MaterialTheme.typography.displaySmall.copy(fontFamily = Tajwal),
+            headlineLarge = MaterialTheme.typography.headlineLarge.copy(fontFamily = Tajwal),
+            headlineMedium = MaterialTheme.typography.headlineMedium.copy(fontFamily = Tajwal),
+            headlineSmall = MaterialTheme.typography.headlineSmall.copy(fontFamily = Tajwal),
+            titleLarge = MaterialTheme.typography.titleLarge.copy(fontFamily = Tajwal),
+            titleMedium = MaterialTheme.typography.titleMedium.copy(fontFamily = Tajwal),
+            titleSmall = MaterialTheme.typography.titleSmall.copy(fontFamily = Tajwal),
+            bodyLarge = MaterialTheme.typography.bodyLarge.copy(fontFamily = Tajwal),
+            bodyMedium = MaterialTheme.typography.bodyMedium.copy(fontFamily = Tajwal),
+            bodySmall = MaterialTheme.typography.bodySmall.copy(fontFamily = Tajwal),
+            labelLarge = MaterialTheme.typography.labelLarge.copy(fontFamily = Tajwal),
+            labelMedium = MaterialTheme.typography.labelMedium.copy(fontFamily = Tajwal),
+            labelSmall = MaterialTheme.typography.labelSmall.copy(fontFamily = Tajwal)
+        ),
         content = content
     )
 }

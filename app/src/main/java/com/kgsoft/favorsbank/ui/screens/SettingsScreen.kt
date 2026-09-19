@@ -1,198 +1,262 @@
 package com.kgsoft.favorsbank.ui.screens
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Language
-import androidx.compose.material.icons.filled.Vibration
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.kgsoft.favorsbank.data.FavorsRepository
-import com.kgsoft.favorsbank.ui.theme.EmeraldGreen
+import androidx.core.content.ContextCompat
+import androidx.navigation.NavController
+import com.kgsoft.favorsbank.R
+import com.kgsoft.favorsbank.data.PrefsRepository
+import com.kgsoft.favorsbank.data.TOAST_ZIKR
+import com.kgsoft.favorsbank.ui.Routes
+import com.kgsoft.favorsbank.ui.Strings
+import com.kgsoft.favorsbank.ui.theme.GreenPrimary
+import com.kgsoft.favorsbank.ui.theme.Tajwal
+import com.kgsoft.favorsbank.util.Notifier
+import com.kgsoft.favorsbank.util.toast
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Settings: notifications, night theme, periodic zikr toasts and bug reports.
+ * Mirrors SettingsActivity. The timers run while the app process is alive,
+ * like the original java.util.Timer usage.
+ */
 @Composable
-fun SettingsScreen(
-    repository: FavorsRepository,
-    onBack: () -> Unit
-) {
-    var vibrationEnabled by remember { mutableStateOf(repository.isVibrationEnabled()) }
-    var selectedLanguage by remember { mutableStateOf(repository.getLanguage()) }
-    var showAboutDialog by remember { mutableStateOf(false) }
-    var showResetDialog by remember { mutableStateOf(false) }
+fun SettingsScreen(navController: NavController, prefs: PrefsRepository) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("الإعدادات ⚙️", fontWeight = FontWeight.Bold) },
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "رجوع")
+    val notificationsOn by prefs.notificationsEnabled.collectAsState(initial = false)
+    val darkTheme by prefs.isDarkTheme.collectAsState(initial = false)
+    val toastsOn by prefs.toastsEnabled.collectAsState(initial = false)
+
+    var toastTasbih by remember { mutableStateOf(true) }
+    var toastProphet by remember { mutableStateOf(false) }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { }
+
+    // Periodic zikr toasts while enabled (original: every 3 minutes).
+    var toastJob by remember { mutableStateOf<Job?>(null) }
+    LaunchedEffect(toastsOn) {
+        toastJob?.cancel()
+        if (toastsOn) {
+            toastJob = scope.launch {
+                delay(2000)
+                while (true) {
+                    if (toastTasbih || toastProphet) {
+                        context.toast(TOAST_ZIKR.random(), long = true)
                     }
+                    delay(3 * 60 * 1000L)
                 }
-            )
+            }
         }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp)
+    }
+
+    // One-shot "hurry to good deeds" reminder shortly after enabling.
+    LaunchedEffect(notificationsOn) {
+        if (notificationsOn) {
+            if (Build.VERSION.SDK_INT >= 33 &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+                PackageManager.PERMISSION_GRANTED
+            ) {
+                permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+            delay(1000)
+            Notifier.showReminder(context)
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 4.dp, top = 8.dp)
         ) {
-            // General Preferences
+            IconButton(onClick = { navController.popBackStack() }) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = GreenPrimary)
+            }
+            Text(Strings.settings, fontFamily = Tajwal, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+        }
+
+        Column(modifier = Modifier.padding(16.dp)) {
+            SettingRow(
+                title = Strings.notifications,
+                subtitle = if (notificationsOn) Strings.enabled else Strings.disabled,
+                checked = notificationsOn,
+                onChecked = { scope.launch { prefs.setNotifications(it) } }
+            )
+            Spacer(Modifier.height(12.dp))
+            SettingRow(
+                title = Strings.nightTheme,
+                subtitle = if (darkTheme) Strings.enabled else Strings.disabled,
+                checked = darkTheme,
+                onChecked = { scope.launch { prefs.setDarkTheme(it) } }
+            )
+            Spacer(Modifier.height(12.dp))
+
             Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(bottom = 16.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(2.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("تفضيلات التطبيق", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                    Spacer(modifier = Modifier.height(12.dp))
-
                     Row(
-                        modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { scope.launch { prefs.setToasts(!toastsOn) } }
                     ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Vibration, contentDescription = null, tint = EmeraldGreen)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("الاهتزاز عند التسبيح والأذكار", fontSize = 14.sp)
-                        }
+                        Text(
+                            Strings.zikrToasts,
+                            fontFamily = Tajwal,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp,
+                            modifier = Modifier.weight(1f)
+                        )
                         Switch(
-                            checked = vibrationEnabled,
-                            onCheckedChange = { checked ->
-                                vibrationEnabled = checked
-                                repository.setVibrationEnabled(checked)
-                            },
-                            colors = SwitchDefaults.colors(
-                                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
-                                checkedTrackColor = EmeraldGreen
-                            )
+                            checked = toastsOn,
+                            onCheckedChange = { scope.launch { prefs.setToasts(it) } },
+                            colors = SwitchDefaults.colors(checkedThumbColor = GreenPrimary)
                         )
                     }
-
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
-
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Icon(Icons.Default.Language, contentDescription = null, tint = EmeraldGreen)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("لغة التطبيق (Language)", fontSize = 14.sp)
-                        }
-                        Row {
-                            FilterChip(
-                                selected = selectedLanguage == "ar",
-                                onClick = {
-                                    selectedLanguage = "ar"
-                                    repository.setLanguage("ar")
-                                },
-                                label = { Text("العربية") }
-                            )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            FilterChip(
-                                selected = selectedLanguage == "en",
-                                onClick = {
-                                    selectedLanguage = "en"
-                                    repository.setLanguage("en")
-                                },
-                                label = { Text("English") }
-                            )
-                        }
-                    }
-                }
-            }
-
-            // About & Reset Section
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    TextButton(
-                        onClick = { showAboutDialog = true },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
+                    if (toastsOn) {
+                        Spacer(Modifier.height(4.dp))
+                        ToastCheck(Strings.toastTasbih, toastTasbih) { toastTasbih = it }
+                        ToastCheck(Strings.toastProphet, toastProphet) { toastProphet = it }
+                        ToastCheck(
+                            Strings.toastAll,
+                            toastTasbih && toastProphet
                         ) {
-                            Icon(Icons.Default.Info, contentDescription = null, tint = EmeraldGreen)
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Text("عن تطبيق بنك الحسنات", fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurface)
+                            toastTasbih = it
+                            toastProphet = it
                         }
-                    }
-
-                    HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-
-                    Button(
-                        onClick = { showResetDialog = true },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text("إعادة ضبط جميع البيانات")
                     }
                 }
             }
-        }
 
-        if (showAboutDialog) {
-            AlertDialog(
-                onDismissRequest = { showAboutDialog = false },
-                title = { Text("عن تطبيق بنك الحسنات 🕋") },
-                text = {
-                    Text("تطبيق إسلامي شامل للذكْر، والتسبيح، والأعمال الصالحة، والمحاسبة اليومية بلغة Kotlin ومصمم بأحدث تقنيات Jetpack Compose لتسهيل الطاعات وكسب الحسنات.")
-                },
-                confirmButton = {
-                    TextButton(onClick = { showAboutDialog = false }) {
-                        Text("تم")
-                    }
+            Spacer(Modifier.height(12.dp))
+
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(2.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { navController.navigate(Routes.REPORT) }
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Image(
+                        painterResource(R.drawable.bug_report_black),
+                        contentDescription = null,
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Spacer(Modifier.width(12.dp))
+                    Text(
+                        Strings.reportBug,
+                        fontFamily = Tajwal,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp
+                    )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SettingRow(
+    title: String,
+    subtitle: String,
+    checked: Boolean,
+    onChecked: (Boolean) -> Unit
+) {
+    Card(
+        shape = RoundedCornerShape(20.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(2.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { onChecked(!checked) }
+                .padding(16.dp)
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, fontFamily = Tajwal, fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                Text(
+                    subtitle,
+                    fontFamily = Tajwal,
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                )
+            }
+            Switch(
+                checked = checked,
+                onCheckedChange = onChecked,
+                colors = SwitchDefaults.colors(checkedThumbColor = GreenPrimary)
             )
         }
+    }
+}
 
-        if (showResetDialog) {
-            AlertDialog(
-                onDismissRequest = { showResetDialog = false },
-                title = { Text("تأكيد تصفير البيانات") },
-                text = { Text("هل أنت تأكد من رغبتك في مسح رصيد الحسنات والإحصائيات وإعادة الضبط؟") },
-                confirmButton = {
-                    Button(
-                        onClick = {
-                            repository.resetAllData()
-                            showResetDialog = false
-                            onBack()
-                        },
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                    ) {
-                        Text("تأكيد المسح")
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showResetDialog = false }) {
-                        Text("إلغاء")
-                    }
-                }
-            )
-        }
+@Composable
+private fun ToastCheck(label: String, checked: Boolean, onChecked: (Boolean) -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onChecked(!checked) }
+    ) {
+        Checkbox(checked = checked, onCheckedChange = onChecked)
+        Text(label, fontFamily = Tajwal, fontSize = 14.sp)
     }
 }
