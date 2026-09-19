@@ -40,12 +40,12 @@ const val FALLBACK_LNG = 32.5599
  * Returns null on any failure — callers must fail silently and keep cache.
  */
 object PrayerApi {
-    suspend fun fetchTimings(lat: Double, lng: Double, date: String): DayPrayers? =
+    suspend fun fetchTimings(lat: Double, lng: Double, date: String, method: Int = 5): DayPrayers? =
         withContext(Dispatchers.IO) {
             runCatching {
                 val url = URL(
                     "https://api.aladhan.com/v1/timings/$date" +
-                        "?latitude=$lat&longitude=$lng&method=5"
+                        "?latitude=$lat&longitude=$lng&method=$method"
                 )
                 val conn = (url.openConnection() as HttpURLConnection).apply {
                     connectTimeout = 12_000

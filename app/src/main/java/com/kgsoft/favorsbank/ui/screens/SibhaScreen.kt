@@ -46,6 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.kgsoft.favorsbank.R
+import androidx.compose.ui.text.font.FontStyle
+import com.kgsoft.favorsbank.data.CORE_INDEX
 import com.kgsoft.favorsbank.ui.Strings
 import com.kgsoft.favorsbank.ui.theme.GreenPrimary
 import com.kgsoft.favorsbank.ui.theme.Tajwal
@@ -121,14 +123,47 @@ fun SibhaScreen(navController: NavController, initialZikr: String? = null) {
                 modifier = Modifier.size(96.dp)
             )
             Spacer(Modifier.height(16.dp))
-            Text(
-                label,
-                fontFamily = Tajwal,
-                fontWeight = FontWeight.Bold,
-                fontSize = 22.sp,
-                textAlign = TextAlign.Center,
-                color = GreenPrimary
-            )
+            // Trilingual label: original + transliteration + meaning when known,
+            // plain Arabic label otherwise.
+            val coreLabel = CORE_INDEX[label.trim()]
+            if (coreLabel != null) {
+                Text(
+                    coreLabel.arabic,
+                    fontFamily = Tajwal,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp,
+                    lineHeight = 34.sp,
+                    textAlign = TextAlign.Center,
+                    color = GreenPrimary
+                )
+                if (coreLabel.transliteration.isNotBlank()) {
+                    Text(
+                        coreLabel.transliteration,
+                        fontStyle = FontStyle.Italic,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                    )
+                }
+                if (Strings.langCode != "ar") {
+                    Text(
+                        coreLabel.meaning(Strings.langCode),
+                        fontSize = 15.sp,
+                        lineHeight = 24.sp,
+                        textAlign = TextAlign.Center,
+                        color = GreenPrimary.copy(alpha = 0.85f)
+                    )
+                }
+            } else {
+                Text(
+                    label,
+                    fontFamily = Tajwal,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 22.sp,
+                    textAlign = TextAlign.Center,
+                    color = GreenPrimary
+                )
+            }
             Spacer(Modifier.height(24.dp))
             Text(
                 counter.toString(),

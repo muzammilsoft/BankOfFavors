@@ -5,15 +5,19 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.kgsoft.favorsbank.data.PrefsRepository
+import com.kgsoft.favorsbank.data.appLangFor
 import com.kgsoft.favorsbank.ui.screens.AboutScreen
 import com.kgsoft.favorsbank.ui.screens.DailyReviewScreen
 import com.kgsoft.favorsbank.ui.screens.DaynightAzkarScreen
@@ -73,14 +77,18 @@ fun BankApp(prefs: PrefsRepository, startRoute: String = Routes.SPLASH) {
     val darkTheme by prefs.isDarkTheme.collectAsState(initial = false)
     val language by prefs.language.collectAsState(initial = "")
 
-    // Mirror the original language rule: English when the setting says english,
-    // or when the system language is English and the setting is not arabic.
-    LaunchedEffect(language) {
-        val systemEnglish = Locale.getDefault().displayLanguage.lowercase().contains("english")
-        Strings.english = language.contains("english") || (systemEnglish && !language.contains("arabic"))
-    }
+    // Resolve the UI language: stored preference wins; otherwise English
+    // system -> English, anything else -> Arabic (original behavior).
+    val systemEnglish = Locale.getDefault().displayLanguage.lowercase().contains("english")
+    val appLang = appLangFor(language.ifBlank { if (systemEnglish) "english" else "arabic" })
+    LaunchedEffect(appLang) { Strings.langCode = appLang.code }
 
     com.kgsoft.favorsbank.ui.theme.BankOfHasanatTheme(darkTheme = darkTheme) {
+        // Mirror layout direction for RTL languages (ar, ur, fa).
+        CompositionLocalProvider(
+            LocalLayoutDirection provides
+                if (appLang.rtl) LayoutDirection.Rtl else LayoutDirection.Ltr
+        ) {
         NavHost(
             navController = navController,
             startDestination = startRoute,
@@ -115,6 +123,7 @@ fun BankApp(prefs: PrefsRepository, startRoute: String = Routes.SPLASH) {
             composable(Routes.LANGUAGE) { SetLanguageScreen(navController, prefs) }
             composable(Routes.ABOUT) { AboutScreen(navController) }
             composable(Routes.REPORT) { ReportBugsScreen(navController) }
+        }
         }
     }
 }

@@ -1,148 +1,155 @@
 package com.kgsoft.favorsbank.ui
 
 /**
- * Minimal bilingual string table. The original app hard-coded Arabic with a few
- * English overrides driven by settings.language / system locale; this keeps the
- * same behavior in one place.
+ * Multilingual string table. Every string has a stable key; Arabic and English
+ * are inline, the other 8 languages live in LangTables. A missing translation
+ * falls back to Arabic (or English when the UI language is English), so the
+ * UI never shows a blank or broken label.
  */
 object Strings {
-    var english: Boolean = false
+    /** Current UI language code: ar, en, fr, ur, id, fa, sw, ha, bn, tr. Set at startup. */
+    var langCode: String = "ar"
 
-    private fun s(ar: String, en: String): String = if (english) en else ar
+    private fun s(key: String, ar: String, en: String): String {
+        if (langCode != "ar" && langCode != "en") {
+            LangTables.get(langCode, key)?.let { return it }
+        }
+        return if (langCode == "en") en else ar
+    }
 
-    val appName get() = s("بنك الحسنات", "Bank of Hasanat")
-    val hasanatSuffix get() = s("حسنة", "hasanat")
+    val appName get() = s("appName", "بنك الحسنات", "Bank of Hasanat")
+    val hasanatSuffix get() = s("hasanatSuffix", "حسنة", "hasanat")
 
     // login
-    val loginTitle get() = s("تسجيل الدخول", "Login")
-    val loginSubtitle get() = s("خطوة غير ضرورية يمكنك تجاوزها", "An unnecessary step you can skip")
-    val username get() = s("اسم المستخدم", "Username")
-    val password get() = s("كلمة المرور", "Password")
-    val login get() = s("دخول", "Login")
-    val dontShowAgain get() = s("عدم العرض مجدداً", "Don't show again")
-    val skip get() = s("تخطي", "Skip")
+    val loginTitle get() = s("loginTitle", "تسجيل الدخول", "Login")
+    val loginSubtitle get() = s("loginSubtitle", "خطوة غير ضرورية يمكنك تجاوزها", "An unnecessary step you can skip")
+    val username get() = s("username", "اسم المستخدم", "Username")
+    val password get() = s("password", "كلمة المرور", "Password")
+    val login get() = s("login", "دخول", "Login")
+    val dontShowAgain get() = s("dontShowAgain", "عدم العرض مجدداً", "Don't show again")
+    val skip get() = s("skip", "تخطي", "Skip")
 
     // home cards
-    val tasks get() = s("المهام", "Tasks")
-    val business get() = s("الأعمال", "Actions")
-    val dailyReview get() = s("المحاسبة اليومية", "Daily review")
-    val myAccount get() = s("حسابي", "My account")
-    val share get() = s("مشاركة", "Share")
-    val salatTimes get() = s("مواقيت الصلاة", "Prayer times")
-    val azkar get() = s("أذكار الصباح والمساء", "Morning & evening azkar")
-    val sibha get() = s("السبحة", "Tasbih")
+    val tasks get() = s("tasks", "المهام", "Tasks")
+    val business get() = s("business", "الأعمال", "Actions")
+    val dailyReview get() = s("dailyReview", "المحاسبة اليومية", "Daily review")
+    val myAccount get() = s("myAccount", "حسابي", "My account")
+    val share get() = s("share", "مشاركة", "Share")
+    val salatTimes get() = s("salatTimes", "مواقيت الصلاة", "Prayer times")
+    val azkar get() = s("azkar", "أذكار الصباح والمساء", "Morning & evening azkar")
+    val sibha get() = s("sibha", "السبحة", "Tasbih")
 
     // drawer
-    val settings get() = s("الإعدادات", "Settings")
-    val about get() = s("حول التطبيق", "About")
-    val language get() = s("اللغة", "Language")
-    val exit get() = s("خروج", "Exit")
+    val settings get() = s("settings", "الإعدادات", "Settings")
+    val about get() = s("about", "حول التطبيق", "About")
+    val language get() = s("language", "اللغة", "Language")
+    val exit get() = s("exit", "خروج", "Exit")
 
     // todo tabs
-    val suggestedBusiness get() = s("أعمال مقترحة", "Suggested deeds")
+    val suggestedBusiness get() = s("suggestedBusiness", "أعمال مقترحة", "Suggested deeds")
 
     // details
-    val investmentDuration get() = s("مدة الإستثمار", "Duration")
-    val netProfit get() = s("صافي الأرباح (الأجر)", "Reward")
-    val investmentDetails get() = s("تفاصيل الإستثمار:", "Investment details:")
-    val confirmCompletion get() = s("تأكيد الإنجاز", "Confirm completion")
-    val useSibha get() = s("إستخدام السبحة", "Use tasbih")
-    val didYouDoIt get() = s("هل أنجزت العمل؟", "Did you complete it?")
-    val confirmHonestly get() = s(
+    val investmentDuration get() = s("investmentDuration", "مدة الإستثمار", "Duration")
+    val netProfit get() = s("netProfit", "صافي الأرباح (الأجر)", "Reward")
+    val investmentDetails get() = s("investmentDetails", "تفاصيل الإستثمار:", "Investment details:")
+    val confirmCompletion get() = s("confirmCompletion", "تأكيد الإنجاز", "Confirm completion")
+    val useSibha get() = s("useSibha", "إستخدام السبحة", "Use tasbih")
+    val didYouDoIt get() = s("didYouDoIt", "هل أنجزت العمل؟", "Did you complete it?")
+    val confirmHonestly get() = s("confirmHonestly", 
         "هل تقر و تشهد صدقاً أنك قمت بإنجاز المهمة أو العمل المذكور هنا؟",
         "Do you honestly confirm you completed this task?"
     )
-    val yesOfCourse get() = s("نعم بالطبع", "Yes, of course")
-    val noLater get() = s("لا، سأفعل", "No, I will")
-    val blessedMsg get() = s("بارك الله فيك حصلت على إنجاز جديد: ", "Bless you, new achievement: ")
+    val yesOfCourse get() = s("yesOfCourse", "نعم بالطبع", "Yes, of course")
+    val noLater get() = s("noLater", "لا، سأفعل", "No, I will")
+    val blessedMsg get() = s("blessedMsg", "بارك الله فيك حصلت على إنجاز جديد: ", "Bless you, new achievement: ")
 
     // daily review
-    val prev get() = s("السابق", "Previous")
-    val next get() = s("التالي", "Next")
-    val endOfQuestions get() = s("إنتهت الأسئلة!", "Questions finished!")
-    val startOfQuestions get() = s("بداية الأسئلة!", "Start of questions!")
+    val prev get() = s("prev", "السابق", "Previous")
+    val next get() = s("next", "التالي", "Next")
+    val endOfQuestions get() = s("endOfQuestions", "إنتهت الأسئلة!", "Questions finished!")
+    val startOfQuestions get() = s("startOfQuestions", "بداية الأسئلة!", "Start of questions!")
 
     // sibha
-    val reset get() = s("تصفير", "Reset")
-    val customWird get() = s("تخصيص وِرد", "Custom wird")
-    val wirdText get() = s("نص الورد", "Wird text")
-    val repeatCount get() = s("عدد التكرار", "Repeat count")
-    val save get() = s("حفظ", "Save")
-    val cancel get() = s("إلغاء", "Cancel")
-    val dontLeaveEmpty get() = s("لا تترك هذا الحقل خالياً", "Don't leave this field empty")
-    val numbersOnly get() = s("أدخل أرقام فقط", "Enter numbers only")
+    val reset get() = s("reset", "تصفير", "Reset")
+    val customWird get() = s("customWird", "تخصيص وِرد", "Custom wird")
+    val wirdText get() = s("wirdText", "نص الورد", "Wird text")
+    val repeatCount get() = s("repeatCount", "عدد التكرار", "Repeat count")
+    val save get() = s("save", "حفظ", "Save")
+    val cancel get() = s("cancel", "إلغاء", "Cancel")
+    val dontLeaveEmpty get() = s("dontLeaveEmpty", "لا تترك هذا الحقل خالياً", "Don't leave this field empty")
+    val numbersOnly get() = s("numbersOnly", "أدخل أرقام فقط", "Enter numbers only")
 
     // settings
-    val notifications get() = s("التنبيهات", "Notifications")
-    val nightTheme get() = s("الوضع الليلي", "Night theme")
-    val zikrToasts get() = s("تنبيهات الأذكار", "Zikr toasts")
-    val toastTasbih get() = s("تنبيهات التسبيح والأذكار", "Tasbih & azkar reminders")
-    val toastProphet get() = s("الصلاة على النبي", "Salawat reminders")
-    val toastAll get() = s("الكل", "All")
-    val reportBug get() = s("الإبلاغ عن خطأ", "Report a bug")
-    val enabled get() = s("مفعلة", "On")
-    val disabled get() = s("غير مفعلة", "Off")
+    val notifications get() = s("notifications", "التنبيهات", "Notifications")
+    val nightTheme get() = s("nightTheme", "الوضع الليلي", "Night theme")
+    val zikrToasts get() = s("zikrToasts", "تنبيهات الأذكار", "Zikr toasts")
+    val toastTasbih get() = s("toastTasbih", "تنبيهات التسبيح والأذكار", "Tasbih & azkar reminders")
+    val toastProphet get() = s("toastProphet", "الصلاة على النبي", "Salawat reminders")
+    val toastAll get() = s("toastAll", "الكل", "All")
+    val reportBug get() = s("reportBug", "الإبلاغ عن خطأ", "Report a bug")
+    val enabled get() = s("enabled", "مفعلة", "On")
+    val disabled get() = s("disabled", "غير مفعلة", "Off")
 
     // language screen
-    val chooseLanguage get() = s("اختر لغة التطبيق", "Choose app language")
-    val saveChanges get() = s("حفظ التغييرات؟", "Save changes?")
-    val restartNeeded get() = s(
+    val chooseLanguage get() = s("chooseLanguage", "اختر لغة التطبيق", "Choose app language")
+    val saveChanges get() = s("saveChanges", "حفظ التغييرات؟", "Save changes?")
+    val restartNeeded get() = s("restartNeeded", 
         "تحتاج إلى إعادة تشغيل التطبيق لرؤية التغييرات.",
         "You need to restart the app to see the changes."
     )
-    val restart get() = s("إعادة التشغيل", "Restart")
-    val later get() = s("لاحقاً", "Later")
-    val langChanged get() = s(
+    val restart get() = s("restart", "إعادة التشغيل", "Restart")
+    val later get() = s("later", "لاحقاً", "Later")
+    val langChanged get() = s("langChanged", 
         "تم تغيير اللغة بنجاح، أعد تشغيل التطبيق لترى التغييرات",
         "Language changed, restart the app to see the changes"
     )
 
     // my account
-    val accountDetails get() = s("بيانات الحساب", "Account details")
-    val level get() = s("المستوى", "Level")
-    val editAccount get() = s("تعديل الحساب", "Edit account")
-    val balance get() = s("الرصيد", "Balance")
+    val accountDetails get() = s("accountDetails", "بيانات الحساب", "Account details")
+    val level get() = s("level", "المستوى", "Level")
+    val editAccount get() = s("editAccount", "تعديل الحساب", "Edit account")
+    val balance get() = s("balance", "الرصيد", "Balance")
 
     // about
-    val aboutApp get() = s("نبذة عن التطبيق", "About the app")
-    val policy get() = s("سياسة", "Policy")
-    val donate get() = s("تبرع", "Donate")
-    val understood get() = s("فهمت", "Understood")
-    val close get() = s("إغلاق", "Close")
-    val shareAndEarn get() = s("مشاركة و كسب الأجر", "Share and earn reward")
-    val checkUpdates get() = s("التحقق من التحديثات", "Check for updates")
+    val aboutApp get() = s("aboutApp", "نبذة عن التطبيق", "About the app")
+    val policy get() = s("policy", "سياسة", "Policy")
+    val donate get() = s("donate", "تبرع", "Donate")
+    val understood get() = s("understood", "فهمت", "Understood")
+    val close get() = s("close", "إغلاق", "Close")
+    val shareAndEarn get() = s("shareAndEarn", "مشاركة و كسب الأجر", "Share and earn reward")
+    val checkUpdates get() = s("checkUpdates", "التحقق من التحديثات", "Check for updates")
 
     // report bugs
-    val sendSuggestion get() = s("إرسال إقتراح", "Send suggestion")
-    val reportBugTitle get() = s("إبلاغ عن خطأ.", "Report a bug.")
-    val writeHere get() = s("اكتب هنا...", "Write here...")
-    val submit get() = s("إرسال", "Submit")
+    val sendSuggestion get() = s("sendSuggestion", "إرسال إقتراح", "Send suggestion")
+    val reportBugTitle get() = s("reportBugTitle", "إبلاغ عن خطأ.", "Report a bug.")
+    val writeHere get() = s("writeHere", "اكتب هنا...", "Write here...")
+    val submit get() = s("submit", "إرسال", "Submit")
 
     // salat
-    val fajr get() = s("الفجر", "Fajr")
-    val shuruj get() = s("الشروق", "Sunrise")
-    val dhuhr get() = s("الظهر", "Dhuhr")
-    val asr get() = s("العصر", "Asr")
-    val maghrib get() = s("المغرب", "Maghrib")
-    val isha get() = s("العشاء", "Isha")
-    val nextPrayer get() = s("الصلاة القادمة", "Next prayer")
-    val remainingTime get() = s("المتبقي", "Remaining")
-    val locationTitle get() = s("تحديد الموقع", "Set location")
-    val locationMessage get() = s(
+    val fajr get() = s("fajr", "الفجر", "Fajr")
+    val shuruj get() = s("shuruj", "الشروق", "Sunrise")
+    val dhuhr get() = s("dhuhr", "الظهر", "Dhuhr")
+    val asr get() = s("asr", "العصر", "Asr")
+    val maghrib get() = s("maghrib", "المغرب", "Maghrib")
+    val isha get() = s("isha", "العشاء", "Isha")
+    val nextPrayer get() = s("nextPrayer", "الصلاة القادمة", "Next prayer")
+    val remainingTime get() = s("remainingTime", "المتبقي", "Remaining")
+    val locationTitle get() = s("locationTitle", "تحديد الموقع", "Set location")
+    val locationMessage get() = s("locationMessage", 
         "نحتاج إلى موقعك مرة واحدة فقط لحساب مواقيت الصلاة بدقة حسب مدينتك.",
         "We need your location once to calculate accurate prayer times for your city."
     )
-    val useMyLocation get() = s("استخدام موقعي", "Use my location")
-    val useKhartoum get() = s("الخرطوم (افتراضي)", "Khartoum (default)")
+    val useMyLocation get() = s("useMyLocation", "استخدام موقعي", "Use my location")
+    val useKhartoum get() = s("useKhartoum", "الخرطوم (افتراضي)", "Khartoum (default)")
 
     // completed tasks log
-    val completedLog get() = s("سجل المهام المنجزة", "Completed tasks log")
-    val noCompletedTasks get() = s("لا توجد مهام منجزة بعد", "No completed tasks yet")
-    val hasanatAdded get() = s("أُضيفت إلى رصيدك", "added to your balance")
-    val blessedWithCount get() = s("بارك الله فيك! حصلت على", "Bless you! You earned")
-    val mayAllahAccept get() = s("تقبل الله طاعتك", "May Allah accept your worship")
+    val completedLog get() = s("completedLog", "سجل المهام المنجزة", "Completed tasks log")
+    val noCompletedTasks get() = s("noCompletedTasks", "لا توجد مهام منجزة بعد", "No completed tasks yet")
+    val hasanatAdded get() = s("hasanatAdded", "أُضيفت إلى رصيدك", "added to your balance")
+    val blessedWithCount get() = s("blessedWithCount", "بارك الله فيك! حصلت على", "Bless you! You earned")
+    val mayAllahAccept get() = s("mayAllahAccept", "تقبل الله طاعتك", "May Allah accept your worship")
 
-    val aboutText get() = s(
+    val aboutText get() = s("aboutText", 
         "بنك الحسنات تطبيق إسلامي يساعدك على استثمار وقتك في الطاعات وجمع الحسنات: مهام وأعمال مقترحة بالأجر والدليل، محاسبة يومية للنفس، أذكار الصباح والمساء، سبحة إلكترونية، ومواقيت الصلاة. شارك التطبيق واجعله صدقة جارية في ميزان حسناتك.",
         "Bank of Hasanat is an Islamic app that helps you invest your time in good deeds: suggested tasks with rewards and evidence, daily self-review, morning and evening azkar, a digital tasbih, and prayer times. Share the app and make it ongoing charity."
     )

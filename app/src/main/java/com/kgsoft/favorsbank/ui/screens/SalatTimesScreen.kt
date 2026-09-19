@@ -39,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.kgsoft.favorsbank.data.APP_LANGS
 import com.kgsoft.favorsbank.data.DayPrayers
 import com.kgsoft.favorsbank.data.FALLBACK_LAT
 import com.kgsoft.favorsbank.data.FALLBACK_LNG
@@ -84,7 +85,10 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
         val lat = prefs.prayerLat.firstValue() ?: return
         val lng = prefs.prayerLng.firstValue() ?: return
         val today = SimpleDateFormat("dd-MM-yyyy", Locale.US).format(Date())
-        val fresh = PrayerApi.fetchTimings(lat, lng, today)
+        // Calculation method follows the UI language's region
+        // (Egypt for Arabs, Karachi for Urdu/Bengali, Diyanet for Turkish, ...).
+        val method = APP_LANGS.find { it.code == Strings.langCode }?.prayerMethod ?: 5
+        val fresh = PrayerApi.fetchTimings(lat, lng, today, method)
         if (fresh != null) {
             prefs.cachePrayerTimes(today, fresh.toJsonString())
             prayers = fresh

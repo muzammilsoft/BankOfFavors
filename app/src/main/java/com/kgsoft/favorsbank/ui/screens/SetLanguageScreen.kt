@@ -35,6 +35,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
+import com.kgsoft.favorsbank.data.APP_LANGS
+import com.kgsoft.favorsbank.data.appLangFor
 import com.kgsoft.favorsbank.data.PrefsRepository
 import com.kgsoft.favorsbank.ui.Strings
 import com.kgsoft.favorsbank.ui.theme.GreenPrimary
@@ -50,15 +52,12 @@ import kotlinx.coroutines.launch
 fun SetLanguageScreen(navController: NavController, prefs: PrefsRepository) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val current by prefs.language.collectAsState(initial = "")
+    val currentRaw by prefs.language.collectAsState(initial = "")
+    // Normalize legacy stored values (e.g. "francais") so the checkmark shows.
+    val current = appLangFor(currentRaw).prefKey
     var pending by remember { mutableStateOf<String?>(null) }
 
-    val languages = listOf(
-        "arabic" to "العربية 🇸🇦",
-        "english" to "English 🇺🇸",
-        "francais" to "Francais 🇫🇷",
-        "urdu" to "أردو"
-    )
+    val languages = APP_LANGS
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
@@ -71,7 +70,8 @@ fun SetLanguageScreen(navController: NavController, prefs: PrefsRepository) {
             Text(Strings.chooseLanguage, fontFamily = Tajwal, fontWeight = FontWeight.Bold, fontSize = 20.sp)
         }
         LazyColumn(modifier = Modifier.padding(16.dp)) {
-            items(languages) { (key, label) ->
+            items(languages) { lang ->
+                val key = lang.prefKey
                 Card(
                     shape = RoundedCornerShape(20.dp),
                     colors = CardDefaults.cardColors(
@@ -94,7 +94,7 @@ fun SetLanguageScreen(navController: NavController, prefs: PrefsRepository) {
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier.padding(20.dp)
                     ) {
-                        Text(label, fontFamily = Tajwal, fontSize = 18.sp, modifier = Modifier.weight(1f))
+                        Text(lang.nativeName, fontFamily = Tajwal, fontSize = 18.sp, modifier = Modifier.weight(1f))
                         if (current == key) {
                             Text("✓", color = GreenPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         }

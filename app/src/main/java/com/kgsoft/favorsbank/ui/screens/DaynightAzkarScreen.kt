@@ -38,8 +38,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.kgsoft.favorsbank.data.AzkarItem
+import com.kgsoft.favorsbank.data.CORE_INDEX
 import com.kgsoft.favorsbank.data.DAY_AZKAR
 import com.kgsoft.favorsbank.data.NIGHT_AZKAR
+import com.kgsoft.favorsbank.ui.components.TrilingualContent
 import com.kgsoft.favorsbank.ui.theme.GreenBright
 import com.kgsoft.favorsbank.ui.theme.GreenPrimary
 import com.kgsoft.favorsbank.ui.theme.Tajwal
@@ -104,7 +106,18 @@ private fun AzkarList(items: List<AzkarItem>) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(item.text, fontFamily = Tajwal, fontSize = 15.sp, lineHeight = 26.sp)
+                        // If this zikr has trilingual data, show the three-line
+                        // display (original + transliteration + meaning);
+                        // otherwise fall back to the Arabic text as before.
+                        val firstSeg = item.text.substringBefore("\n\n").trim()
+                        val core = CORE_INDEX[firstSeg]
+                        if (core != null) {
+                            val virtue = item.text.substringAfter("\n\n", "")
+                                .trim().takeIf { it.isNotEmpty() }
+                            TrilingualContent(core.copy(virtueAr = virtue ?: core.virtueAr))
+                        } else {
+                            Text(item.text, fontFamily = Tajwal, fontSize = 15.sp, lineHeight = 26.sp)
+                        }
                         Spacer(modifier = Modifier.padding(2.dp))
                         LinearProgressIndicator(
                             progress = { (done.toFloat() / item.count).coerceIn(0f, 1f) },
