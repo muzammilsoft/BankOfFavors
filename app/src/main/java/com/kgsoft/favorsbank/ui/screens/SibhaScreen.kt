@@ -35,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
@@ -117,7 +116,7 @@ fun SibhaScreen(navController: NavController, initialZikr: String? = null) {
             verticalArrangement = Arrangement.Center
         ) {
             Icon(
-                imageVector = ImageVector.vectorResource(R.drawable.ic_sibha),
+                imageVector = vectorResource(R.drawable.ic_sibha),
                 contentDescription = null,
                 tint = GreenPrimary,
                 modifier = Modifier.size(96.dp)

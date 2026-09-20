@@ -43,7 +43,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
@@ -345,7 +344,7 @@ fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
                                 modifier = Modifier.weight(1f)
                             )
                             Icon(
-                                imageVector = ImageVector.vectorResource(card.icon),
+                                imageVector = vectorResource(card.icon),
                                 contentDescription = null,
                                 tint = Color.White,
                                 modifier = Modifier.size(30.dp)
