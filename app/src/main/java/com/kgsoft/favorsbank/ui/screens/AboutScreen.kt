@@ -3,6 +3,7 @@ package com.kgsoft.favorsbank.ui.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -43,6 +44,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.kgsoft.favorsbank.R
+import com.kgsoft.favorsbank.data.APP_LANGS
+import com.kgsoft.favorsbank.data.TRANSLATION_SOURCES
 import com.kgsoft.favorsbank.ui.Strings
 import com.kgsoft.favorsbank.ui.theme.GreenPrimary
 import com.kgsoft.favorsbank.ui.theme.Tajwal
@@ -59,6 +62,7 @@ fun AboutScreen(navController: NavController) {
     val context = LocalContext.current
     var showAbout by remember { mutableStateOf(false) }
     var showDonate by remember { mutableStateOf(false) }
+    var showSources by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
@@ -125,6 +129,45 @@ fun AboutScreen(navController: NavController) {
 
             AboutCard("تواصل معنا", R.drawable.ic_reply_black) {
                 context.openUrl("https://t.me/muzammil_yahia")
+            }
+
+            AboutCard(Strings.translationSources, R.drawable.ic_local_library_black) {
+                showSources = !showSources
+            }
+
+            AnimatedVisibility(visible = showSources) {
+                Card(
+                    shape = RoundedCornerShape(20.dp),
+                    colors = CardDefaults.cardColors(containerColor = GreenPrimary.copy(alpha = 0.12f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 6.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.padding(20.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        TRANSLATION_SOURCES.forEach { (code, citation) ->
+                            val nativeName = APP_LANGS.find { it.code == code }?.nativeName ?: code
+                            Column {
+                                Text(
+                                    nativeName,
+                                    fontFamily = Tajwal,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    color = GreenPrimary
+                                )
+                                Text(
+                                    citation,
+                                    fontFamily = Tajwal,
+                                    fontSize = 13.sp,
+                                    lineHeight = 20.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.75f)
+                                )
+                            }
+                        }
+                    }
+                }
             }
 
             Spacer(Modifier.height(12.dp))

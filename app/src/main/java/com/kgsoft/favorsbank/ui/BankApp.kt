@@ -4,6 +4,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -89,6 +92,13 @@ fun BankApp(prefs: PrefsRepository, startRoute: String = Routes.SPLASH) {
             LocalLayoutDirection provides
                 if (appLang.rtl) LayoutDirection.Rtl else LayoutDirection.Ltr
         ) {
+        // Central background: every screen sits on the theme background color.
+        // (The window background is fixed white, so screens without their own
+        // background would stay white in dark mode and light text would vanish.)
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = MaterialTheme.colorScheme.background
+        ) {
         NavHost(
             navController = navController,
             startDestination = startRoute,
@@ -124,6 +134,7 @@ fun BankApp(prefs: PrefsRepository, startRoute: String = Routes.SPLASH) {
             composable(Routes.ABOUT) { AboutScreen(navController) }
             composable(Routes.REPORT) { ReportBugsScreen(navController) }
         }
+        } // Surface: theme background behind every screen
         }
     }
 }

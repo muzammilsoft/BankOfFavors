@@ -4,12 +4,13 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,6 +47,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -54,6 +56,8 @@ import androidx.navigation.NavController
 import com.kgsoft.favorsbank.R
 import com.kgsoft.favorsbank.data.AYAT
 import com.kgsoft.favorsbank.data.HOME_ZIKR
+import com.kgsoft.favorsbank.data.HOME_ZIKR_I18N
+import com.kgsoft.favorsbank.data.VERSE_I18N
 import com.kgsoft.favorsbank.data.PrefsRepository
 import com.kgsoft.favorsbank.data.RECOMMENDATION_JOBS
 import com.kgsoft.favorsbank.data.firstValue
@@ -77,10 +81,10 @@ private data class ToolCard(
 
 /**
  * Home screen: balance header, rotating Quran verse, rotating zikr reminder,
- * tool cards grid and the navigation drawer. Mirrors MainActivity.
+ * wide tool buttons and the navigation drawer. Mirrors MainActivity.
  *
- * Tool cards use the "grain ear" shape (two rounded diagonal corners, two
- * sharp) and are sized to fit on one screen with no scrolling.
+ * Tool buttons are full-width horizontal rows (text at the start, icon at the
+ * end) using the "grain ear" shape — compact, leaving room for future additions.
  */
 @Composable
 fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
@@ -91,8 +95,10 @@ fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
     val username by prefs.username.collectAsState(initial = null)
     val notificationsOn by prefs.notificationsEnabled.collectAsState(initial = false)
 
-    var verse by remember { mutableStateOf(AYAT.random()) }
-    var zikr by remember { mutableStateOf(HOME_ZIKR.random()) }
+    var verseIndex by remember { mutableStateOf(AYAT.indices.random()) }
+    var zikrIndex by remember { mutableStateOf(HOME_ZIKR.indices.random()) }
+    val verse = AYAT[verseIndex]
+    val zikr = HOME_ZIKR[zikrIndex]
 
     // Launch counter (original showed a debug toast on the 3rd launch).
     LaunchedEffect(Unit) {
@@ -104,7 +110,7 @@ fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
     LaunchedEffect(Unit) {
         delay(2000)
         while (true) {
-            verse = AYAT.random()
+            verseIndex = AYAT.indices.random()
             delay(3 * 60 * 1000L)
         }
     }
@@ -112,7 +118,7 @@ fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
     LaunchedEffect(Unit) {
         delay(10_000)
         while (true) {
-            zikr = HOME_ZIKR.random()
+            zikrIndex = HOME_ZIKR.indices.random()
             delay(3 * 60 * 1000L)
         }
     }
@@ -168,6 +174,7 @@ fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
             Row(
@@ -207,88 +214,142 @@ fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
 
             Spacer(Modifier.height(10.dp))
 
-            // Rotating Quran verse
+            // Rotating Quran verse (showcase): large text for readability,
+            // plus pronunciation + official translation when available.
             Card(
                 shape = RoundedCornerShape(24.dp),
                 colors = CardDefaults.cardColors(containerColor = GreenPrimary.copy(alpha = 0.1f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    verse,
-                    fontFamily = QuranFont,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    textAlign = TextAlign.Center,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    modifier = Modifier.padding(12.dp)
-                )
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    val sacredVerse = VERSE_I18N.getOrNull(verseIndex)
+                    val vlang = Strings.langCode
+                    Text(
+                        verse,
+                        fontFamily = QuranFont,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        lineHeight = 34.sp,
+                        textAlign = TextAlign.Center,
+                        color = MaterialTheme.colorScheme.onBackground,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    if (sacredVerse != null) {
+                        val vpron = sacredVerse.translit(vlang)
+                        if (vpron.isNotBlank()) {
+                            Text(
+                                vpron,
+                                fontStyle = FontStyle.Italic,
+                                fontSize = 14.sp,
+                                textAlign = TextAlign.Center,
+                                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        if (vlang != "ar") {
+                            Text(
+                                sacredVerse.meaning(vlang),
+                                fontSize = 15.sp,
+                                lineHeight = 26.sp,
+                                textAlign = TextAlign.Center,
+                                color = GreenPrimary,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
+                }
             }
 
             Spacer(Modifier.height(6.dp))
 
-            // Rotating zikr reminder
-            Text(
-                zikr,
-                fontFamily = Tajwal,
-                fontSize = 14.sp,
-                textAlign = TextAlign.Center,
-                color = GreenPrimary,
-                modifier = Modifier.fillMaxWidth()
-            )
+            // Rotating zikr reminder (footer): trilingual when available.
+            val sacredZikr = HOME_ZIKR_I18N.getOrNull(zikrIndex)
+            val zlang = Strings.langCode
+            if (sacredZikr != null && zlang != "ar") {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        zikr.trim(),
+                        fontFamily = Tajwal,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center,
+                        color = GreenPrimary
+                    )
+                    val zpron = sacredZikr.translit(zlang)
+                    if (zpron.isNotBlank()) {
+                        Text(
+                            zpron,
+                            fontStyle = FontStyle.Italic,
+                            fontSize = 13.sp,
+                            textAlign = TextAlign.Center,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
+                        )
+                    }
+                    Text(
+                        sacredZikr.meaning(zlang),
+                        fontSize = 14.sp,
+                        lineHeight = 22.sp,
+                        textAlign = TextAlign.Center,
+                        color = GreenPrimary.copy(alpha = 0.85f)
+                    )
+                }
+            } else {
+                Text(
+                    zikr,
+                    fontFamily = Tajwal,
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center,
+                    color = GreenPrimary,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
 
             Spacer(Modifier.height(10.dp))
 
-            // Tool cards: fixed 4x2 grid, weighted to fill the remaining space
-            // so the whole home fits on screen with no scrolling.
+            // Tool buttons: full-width horizontal rows — text at the start side,
+            // icon at the end side (right/left in RTL). Compact on purpose:
+            // the freed space is reserved for future updates.
             Column(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+                modifier = Modifier.fillMaxWidth()
             ) {
-                for (row in 0 until 4) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                cards.forEach { card ->
+                    Card(
+                        shape = GrainShape,
+                        colors = CardDefaults.cardColors(containerColor = GreenPrimary),
+                        elevation = CardDefaults.cardElevation(2.dp),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .weight(1f)
+                            .clickable { card.onClick() }
                     ) {
-                        for (col in 0 until 2) {
-                            val card = cards[row * 2 + col]
-                            Card(
-                                shape = GrainShape,
-                                colors = CardDefaults.cardColors(containerColor = GreenPrimary),
-                                elevation = CardDefaults.cardElevation(4.dp),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .fillMaxHeight()
-                                    .clickable { card.onClick() }
-                            ) {
-                                Column(
-                                    modifier = Modifier
-                                        .fillMaxSize()
-                                        .padding(8.dp),
-                                    horizontalAlignment = Alignment.CenterHorizontally,
-                                    verticalArrangement = Arrangement.Center
-                                ) {
-                                    Icon(
-                                        imageVector = ImageVector.vectorResource(card.icon),
-                                        contentDescription = null,
-                                        tint = Color.White,
-                                        modifier = Modifier.size(38.dp)
-                                    )
-                                    Spacer(Modifier.height(6.dp))
-                                    Text(
-                                        card.title,
-                                        fontFamily = Tajwal,
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 12.sp,
-                                        color = Color.White,
-                                        textAlign = TextAlign.Center,
-                                        maxLines = 2
-                                    )
-                                }
-                            }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 20.dp, vertical = 14.dp)
+                        ) {
+                            Text(
+                                card.title,
+                                fontFamily = Tajwal,
+                                fontWeight = FontWeight.Bold,
+                                fontSize = 16.sp,
+                                color = Color.White,
+                                textAlign = TextAlign.Start,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(
+                                imageVector = ImageVector.vectorResource(card.icon),
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(30.dp)
+                            )
                         }
                     }
                 }

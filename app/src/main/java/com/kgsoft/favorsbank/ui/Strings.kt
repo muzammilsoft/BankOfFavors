@@ -115,6 +115,7 @@ object Strings {
     val policy get() = s("policy", "سياسة", "Policy")
     val donate get() = s("donate", "تبرع", "Donate")
     val understood get() = s("understood", "فهمت", "Understood")
+    val translationSources get() = s("translationSources", "مصادر الترجمات", "Translation sources")
     val close get() = s("close", "إغلاق", "Close")
     val shareAndEarn get() = s("shareAndEarn", "مشاركة و كسب الأجر", "Share and earn reward")
     val checkUpdates get() = s("checkUpdates", "التحقق من التحديثات", "Check for updates")

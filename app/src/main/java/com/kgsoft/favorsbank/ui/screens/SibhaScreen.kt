@@ -47,7 +47,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.kgsoft.favorsbank.R
 import androidx.compose.ui.text.font.FontStyle
-import com.kgsoft.favorsbank.data.CORE_INDEX
+import com.kgsoft.favorsbank.data.ZIKR_I18N
 import com.kgsoft.favorsbank.ui.Strings
 import com.kgsoft.favorsbank.ui.theme.GreenPrimary
 import com.kgsoft.favorsbank.ui.theme.Tajwal
@@ -123,12 +123,16 @@ fun SibhaScreen(navController: NavController, initialZikr: String? = null) {
                 modifier = Modifier.size(96.dp)
             )
             Spacer(Modifier.height(16.dp))
-            // Trilingual label: original + transliteration + meaning when known,
-            // plain Arabic label otherwise.
-            val coreLabel = CORE_INDEX[label.trim()]
-            if (coreLabel != null) {
+            // Trilingual label: original + pronunciation in the user's
+            // language + official translation when known, plain Arabic
+            // label otherwise.
+            val zikrKey = label.trim()
+            val sacredLabel = ZIKR_I18N[zikrKey]
+                ?: if (zikrKey == "الحمدلله") ZIKR_I18N["الحمد لله"] else null
+            if (sacredLabel != null) {
+                val lang = Strings.langCode
                 Text(
-                    coreLabel.arabic,
+                    zikrKey,
                     fontFamily = Tajwal,
                     fontWeight = FontWeight.Bold,
                     fontSize = 22.sp,
@@ -136,18 +140,19 @@ fun SibhaScreen(navController: NavController, initialZikr: String? = null) {
                     textAlign = TextAlign.Center,
                     color = GreenPrimary
                 )
-                if (coreLabel.transliteration.isNotBlank()) {
+                val pron = sacredLabel.translit(lang)
+                if (pron.isNotBlank()) {
                     Text(
-                        coreLabel.transliteration,
+                        pron,
                         fontStyle = FontStyle.Italic,
                         fontSize = 14.sp,
                         textAlign = TextAlign.Center,
                         color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
                     )
                 }
-                if (Strings.langCode != "ar") {
+                if (lang != "ar") {
                     Text(
-                        coreLabel.meaning(Strings.langCode),
+                        sacredLabel.meaning(lang),
                         fontSize = 15.sp,
                         lineHeight = 24.sp,
                         textAlign = TextAlign.Center,
