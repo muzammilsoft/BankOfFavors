@@ -34,7 +34,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -94,7 +93,7 @@ fun TodoScreen(navController: NavController, prefs: PrefsRepository, initialTab:
                 text = { Text(Strings.tasks, fontFamily = Tajwal) },
                 icon = {
                     Icon(
-                        imageVector = vectorResource(R.drawable.ic_tasks),
+                        painter = painterResource(R.drawable.ic_tasks),
                         contentDescription = null,
                         tint = GreenPrimary,
                         modifier = Modifier.size(28.dp)
@@ -107,7 +106,7 @@ fun TodoScreen(navController: NavController, prefs: PrefsRepository, initialTab:
                 text = { Text(Strings.business, fontFamily = Tajwal) },
                 icon = {
                     Icon(
-                        imageVector = vectorResource(R.drawable.ic_business),
+                        painter = painterResource(R.drawable.ic_business),
                         contentDescription = null,
                         tint = GreenPrimary,
                         modifier = Modifier.size(28.dp)

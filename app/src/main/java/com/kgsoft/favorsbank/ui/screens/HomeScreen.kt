@@ -45,7 +45,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -344,7 +343,7 @@ fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
                                 modifier = Modifier.weight(1f)
                             )
                             Icon(
-                                imageVector = vectorResource(card.icon),
+                                painter = painterResource(card.icon),
                                 contentDescription = null,
                                 tint = Color.White,
                                 modifier = Modifier.size(30.dp)
