@@ -116,7 +116,7 @@ object PrayerLocation {
                     override fun onLocationChanged(loc: android.location.Location) {
                         if (cont.isActive) {
                             stop()
-                            cont.resume(loc.latitude to loc.longitude)
+                            cont.resume(loc.latitude to loc.longitude, null)
                         }
                     }
                     override fun onProviderEnabled(provider: String) {}
@@ -124,13 +124,13 @@ object PrayerLocation {
                 }
                 timeout = Runnable {
                     stop()
-                    if (cont.isActive) cont.resume(null)
+                    if (cont.isActive) cont.resume(null, null)
                 }
                 runCatching {
                     for (p in providers) lm.requestLocationUpdates(p, 0L, 0f, listener!!, looper)
                 }.onFailure {
                     stop()
-                    if (cont.isActive) cont.resume(null)
+                    if (cont.isActive) cont.resume(null, null)
                     return@suspendCancellableCoroutine
                 }
                 cont.invokeOnCancellation { stop() }
