@@ -21,7 +21,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.kgsoft.favorsbank.data.PrefsRepository
-import com.kgsoft.favorsbank.data.appLangFor
+import com.kgsoft.favorsbank.data.resolveAppLang
 import com.kgsoft.favorsbank.ui.screens.AboutScreen
 import com.kgsoft.favorsbank.ui.screens.DailyReviewScreen
 import com.kgsoft.favorsbank.ui.screens.DaynightAzkarScreen
@@ -36,8 +36,6 @@ import com.kgsoft.favorsbank.ui.screens.ShowDetailsScreen
 import com.kgsoft.favorsbank.ui.screens.SibhaScreen
 import com.kgsoft.favorsbank.ui.screens.SplashScreen
 import com.kgsoft.favorsbank.ui.screens.TodoScreen
-import java.util.Locale
-
 object Routes {
     const val SPLASH = "splash"
     const val LOGIN = "login"
@@ -81,10 +79,9 @@ fun BankApp(prefs: PrefsRepository, startRoute: String = Routes.SPLASH) {
     val darkTheme by prefs.isDarkTheme.collectAsState(initial = false)
     val language by prefs.language.collectAsState(initial = "")
 
-    // Resolve the UI language: stored preference wins; otherwise English
-    // system -> English, anything else -> Arabic (original behavior).
-    val systemEnglish = Locale.getDefault().displayLanguage.lowercase().contains("english")
-    val appLang = appLangFor(language.ifBlank { if (systemEnglish) "english" else "arabic" })
+    // Resolve the UI language: stored preference wins; otherwise auto-detect
+    // the device language, falling back to English when unsupported.
+    val appLang = resolveAppLang(language)
     LaunchedEffect(appLang) { Strings.langCode = appLang.code }
 
     com.kgsoft.favorsbank.ui.theme.BankOfHasanatTheme(darkTheme = darkTheme) {

@@ -1,5 +1,7 @@
 package com.kgsoft.favorsbank.data
 
+import java.util.Locale
+
 /**
  * The 10 supported UI languages. [prayerMethod] is the AlAdhan API calculation
  * method most appropriate for the regions where the language is spoken, so
@@ -35,3 +37,22 @@ fun appLangFor(pref: String): AppLang {
     if (p.contains("english")) return APP_LANGS[1]
     return APP_LANGS[0]
 }
+
+/**
+ * Detects the device language and maps it to a supported app language.
+ * Falls back to English when the device language is not supported.
+ */
+fun deviceAppLang(): AppLang {
+    val sys = Locale.getDefault().language.lowercase()
+    APP_LANGS.find { it.code == sys }?.let { return it }
+    // Old Java/Android used "in" for Indonesian; modern releases use "id".
+    if (sys == "in") return APP_LANGS.first { it.code == "id" }
+    return APP_LANGS.first { it.code == "en" }
+}
+
+/**
+ * Resolves the effective app language: an explicitly stored preference wins,
+ * otherwise the device language is auto-detected (English fallback).
+ */
+fun resolveAppLang(storedPref: String): AppLang =
+    if (storedPref.isBlank()) deviceAppLang() else appLangFor(storedPref)

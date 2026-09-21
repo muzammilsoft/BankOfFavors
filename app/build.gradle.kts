@@ -13,15 +13,31 @@ android {
         applicationId = "com.kgsoft.favorsbank"
         minSdk = 24
         targetSdk = 34
-        versionCode = 4
-        versionName = "1.3.0"
+        versionCode = 5
+        versionName = "1.4.0"
         vectorDrawables {
             useSupportLibrary = true
         }
     }
 
+    // Release signing: the keystore is decoded from the KEYSTORE_BASE64 secret
+    // in CI (see .github/workflows/build.yml) and never committed to the repo.
+    // Locally, set KEYSTORE_PATH/KEYSTORE_PASSWORD/KEY_ALIAS/KEY_PASSWORD to sign.
+    signingConfigs {
+        create("release") {
+            val ksPath = System.getenv("KEYSTORE_PATH")
+            if (!ksPath.isNullOrBlank()) {
+                storeFile = file(ksPath)
+                storePassword = System.getenv("KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("KEY_ALIAS")
+                keyPassword = System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),

@@ -45,6 +45,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.kgsoft.favorsbank.data.REVIEW_QUESTIONS
+import com.kgsoft.favorsbank.data.subText
+import com.kgsoft.favorsbank.data.text
 import com.kgsoft.favorsbank.ui.Strings
 import com.kgsoft.favorsbank.ui.theme.GreenPrimary
 import com.kgsoft.favorsbank.ui.theme.NopeRed
@@ -85,6 +87,12 @@ fun DailyReviewScreen(navController: NavController) {
     }
 
     val q = REVIEW_QUESTIONS[index]
+    // Non-Arabic UI languages see the English question text (fallback plan v1.4.0).
+    val langCode = Strings.langCode
+    val en = langCode != "ar"
+    val noLabel = if (en) "No" else "لا"
+    val maybeLabel = if (en) "Maybe" else "ربما"
+    val yesLabel = if (en) "Yes" else "نعم"
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
@@ -124,17 +132,18 @@ fun DailyReviewScreen(navController: NavController) {
             ) {
                 Column(modifier = Modifier.padding(24.dp)) {
                     Text(
-                        q.question,
+                        q.text(langCode),
                         fontFamily = Tajwal,
                         fontWeight = FontWeight.Bold,
                         fontSize = 20.sp,
                         textAlign = TextAlign.Center,
                         modifier = Modifier.fillMaxWidth()
                     )
-                    if (q.sub.isNotBlank()) {
+                    val sub = q.subText(langCode)
+                    if (sub.isNotBlank()) {
                         Spacer(Modifier.height(12.dp))
                         Text(
-                            q.sub,
+                            sub,
                             fontFamily = Tajwal,
                             fontSize = 15.sp,
                             textAlign = TextAlign.Center,
@@ -156,21 +165,21 @@ fun DailyReviewScreen(navController: NavController) {
                     colors = ButtonDefaults.buttonColors(containerColor = NopeRed),
                     shape = RoundedCornerShape(50),
                     modifier = Modifier.weight(1f)
-                ) { Text("لا", fontFamily = Tajwal, fontWeight = FontWeight.Bold, color = Color.White) }
+                ) { Text(noLabel, fontFamily = Tajwal, fontWeight = FontWeight.Bold, color = Color.White) }
                 Spacer(Modifier.width(8.dp))
                 Button(
                     onClick = { answer(1) },
                     colors = ButtonDefaults.buttonColors(containerColor = Color.Gray),
                     shape = RoundedCornerShape(50),
                     modifier = Modifier.weight(1f)
-                ) { Text("ربما", fontFamily = Tajwal, fontWeight = FontWeight.Bold, color = Color.White) }
+                ) { Text(maybeLabel, fontFamily = Tajwal, fontWeight = FontWeight.Bold, color = Color.White) }
                 Spacer(Modifier.width(8.dp))
                 Button(
                     onClick = { answer(2) },
                     colors = ButtonDefaults.buttonColors(containerColor = GreenPrimary),
                     shape = RoundedCornerShape(50),
                     modifier = Modifier.weight(1f)
-                ) { Text("نعم", fontFamily = Tajwal, fontWeight = FontWeight.Bold, color = Color.White) }
+                ) { Text(yesLabel, fontFamily = Tajwal, fontWeight = FontWeight.Bold, color = Color.White) }
             }
 
             Spacer(Modifier.height(24.dp))
@@ -205,7 +214,8 @@ fun DailyReviewScreen(navController: NavController) {
             title = { Text(Strings.endOfQuestions, fontFamily = Tajwal, fontWeight = FontWeight.Bold) },
             text = {
                 Text(
-                    "نعم: $yes\nربما: $maybe\nلا: $no",
+                    if (en) "$yesLabel: $yes\n$maybeLabel: $maybe\n$noLabel: $no"
+                    else "نعم: $yes\nربما: $maybe\nلا: $no",
                     fontFamily = Tajwal,
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center,

@@ -43,6 +43,7 @@ import com.kgsoft.favorsbank.data.AssetsRepo
 import com.kgsoft.favorsbank.data.Job
 import com.kgsoft.favorsbank.data.Mission
 import com.kgsoft.favorsbank.data.PrefsRepository
+import com.kgsoft.favorsbank.data.resolveAppLang
 import com.kgsoft.favorsbank.ui.DetailsPayload
 import com.kgsoft.favorsbank.ui.DetailsStore
 import com.kgsoft.favorsbank.ui.Routes
@@ -62,13 +63,14 @@ fun TodoScreen(navController: NavController, prefs: PrefsRepository, initialTab:
     val language by prefs.language.collectAsState(initial = "")
     var tab by remember { mutableStateOf(initialTab.coerceIn(0, 1)) }
 
-    val missions = remember(language) {
+    val langCode = resolveAppLang(language).code
+    val missions = remember(langCode) {
         runCatching {
-            AssetsRepo.loadMissions(context, english = language.contains("english"))
+            AssetsRepo.loadMissions(context, langCode = langCode)
         }.getOrDefault(emptyList())
     }
-    val jobs = remember {
-        runCatching { AssetsRepo.loadJobs(context) }.getOrDefault(emptyList())
+    val jobs = remember(langCode) {
+        runCatching { AssetsRepo.loadJobs(context, langCode = langCode) }.getOrDefault(emptyList())
     }
 
     Column(modifier = Modifier.fillMaxSize()) {

@@ -27,14 +27,32 @@ data class Job(
 private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true }
 
 object AssetsRepo {
-    fun loadMissions(context: Context, english: Boolean): List<Mission> {
-        val file = if (english) "missions_en.json" else "missions.json"
+    /**
+     * Missions file for the UI language: a dedicated file when one exists
+     * (ar/en/fr/sw), otherwise the English file as the universal fallback.
+     */
+    fun loadMissions(context: Context, langCode: String): List<Mission> {
+        val file = when (langCode) {
+            "ar" -> "missions.json"
+            "fr" -> "missions_fr.json"
+            "sw" -> "missions_sawahili.json"
+            else -> "missions_en.json" // en + ur/id/fa/ha/bn/tr fall back to English
+        }
         val text = context.assets.open(file).bufferedReader().use { it.readText() }
         return json.decodeFromString(ListSerializer(Mission.serializer()), text)
     }
 
-    fun loadJobs(context: Context): List<Job> {
-        val text = context.assets.open("jobs.json").bufferedReader().use { it.readText() }
+    /**
+     * Jobs file for the UI language: Arabic source, English for every other
+     * language (no per-language jobs files exist yet).
+     */
+    fun loadJobs(context: Context, langCode: String): List<Job> {
+        val file = if (langCode == "ar") "jobs.json" else "jobs_en.json"
+        val text = context.assets.open(file).bufferedReader().use { it.readText() }
         return json.decodeFromString(ListSerializer(Job.serializer()), text)
     }
+
+    /** Backwards-compatible overload (defaults to the old ar/en behavior). */
+    fun loadMissions(context: Context, english: Boolean): List<Mission> =
+        loadMissions(context, if (english) "en" else "ar")
 }

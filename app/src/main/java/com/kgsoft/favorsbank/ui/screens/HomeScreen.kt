@@ -4,8 +4,6 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -78,11 +76,12 @@ private data class ToolCard(
 )
 
 /**
- * Home screen: balance header, rotating Quran verse, rotating zikr reminder,
- * wide tool buttons and the navigation drawer. Mirrors MainActivity.
+ * Home screen: balance header, rotating Quran verse, 2-column tool grid
+ * and the navigation drawer. Mirrors MainActivity.
  *
- * Tool buttons are full-width horizontal rows (text at the start, icon at the
- * end) using the "grain ear" shape — compact, leaving room for future additions.
+ * The tool buttons are a fixed 2-column grid (icon over text) with no
+ * scrolling — everything fits on one screen. The rotating zikr reminder
+ * sits at the bottom as the screen footer.
  */
 @Composable
 fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
@@ -172,7 +171,6 @@ fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
-                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
             Row(
@@ -261,7 +259,53 @@ fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
                 }
             }
 
-            Spacer(Modifier.height(6.dp))
+            Spacer(Modifier.height(10.dp))
+
+            // Tool buttons: fixed 2-column grid — icon over text, no scrolling.
+            cards.chunked(2).forEach { rowCards ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    rowCards.forEach { card ->
+                        Card(
+                            shape = GrainShape,
+                            colors = CardDefaults.cardColors(containerColor = GreenPrimary),
+                            elevation = CardDefaults.cardElevation(2.dp),
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { card.onClick() }
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 14.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(card.icon),
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                                Spacer(Modifier.height(6.dp))
+                                Text(
+                                    card.title,
+                                    fontFamily = Tajwal,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 15.sp,
+                                    color = Color.White,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                    if (rowCards.size == 1) Spacer(Modifier.weight(1f))
+                }
+                Spacer(Modifier.height(10.dp))
+            }
+
+            Spacer(Modifier.weight(1f))
 
             // Rotating zikr reminder (footer): trilingual when available.
             val sacredZikr = HOME_ZIKR_I18N.getOrNull(zikrIndex)
@@ -307,50 +351,6 @@ fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
                     color = GreenPrimary,
                     modifier = Modifier.fillMaxWidth()
                 )
-            }
-
-            Spacer(Modifier.height(10.dp))
-
-            // Tool buttons: full-width horizontal rows — text at the start side,
-            // icon at the end side (right/left in RTL). Compact on purpose:
-            // the freed space is reserved for future updates.
-            Column(
-                verticalArrangement = Arrangement.spacedBy(10.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                cards.forEach { card ->
-                    Card(
-                        shape = GrainShape,
-                        colors = CardDefaults.cardColors(containerColor = GreenPrimary),
-                        elevation = CardDefaults.cardElevation(2.dp),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { card.onClick() }
-                    ) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 20.dp, vertical = 14.dp)
-                        ) {
-                            Text(
-                                card.title,
-                                fontFamily = Tajwal,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = Color.White,
-                                textAlign = TextAlign.Start,
-                                modifier = Modifier.weight(1f)
-                            )
-                            Icon(
-                                painter = painterResource(card.icon),
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(30.dp)
-                            )
-                        }
-                    }
-                }
             }
         }
     }
