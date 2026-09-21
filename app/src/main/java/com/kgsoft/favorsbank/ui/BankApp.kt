@@ -25,6 +25,7 @@ import com.kgsoft.favorsbank.data.resolveAppLang
 import com.kgsoft.favorsbank.ui.screens.AboutScreen
 import com.kgsoft.favorsbank.ui.screens.DailyReviewScreen
 import com.kgsoft.favorsbank.ui.screens.DaynightAzkarScreen
+import com.kgsoft.favorsbank.ui.screens.DiagLogScreen
 import com.kgsoft.favorsbank.ui.screens.HomeScreen
 import com.kgsoft.favorsbank.ui.screens.LoginScreen
 import com.kgsoft.favorsbank.ui.screens.MyAccountScreen
