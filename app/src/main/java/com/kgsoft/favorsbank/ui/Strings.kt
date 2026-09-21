@@ -154,6 +154,10 @@ object Strings {
     )
     val useMyLocation get() = s("useMyLocation", "استخدام موقعي", "Use my location")
     val useKhartoum get() = s("useKhartoum", "الخرطوم (افتراضي)", "Khartoum (default)")
+    val searchCityHint get() = s("searchCityHint", "ابحث عن مدينتك…", "Search your city…")
+    val noCityResults get() = s("noCityResults", "لا توجد مدينة بهذا الاسم", "No city with this name")
+    val changeCity get() = s("changeCity", "تغيير", "Change")
+    val myCurrentLocation get() = s("myCurrentLocation", "موقعي الحالي", "My current location")
     val gpsTitle get() = s("gpsTitle", "تفعيل خدمة الموقع", "Enable location services")
     val gpsMessage get() = s("gpsMessage",
         "خدمة الموقع (GPS) غير مفعّلة على هاتفك. يرجى تفعيلها من الإعدادات حتى نتمكن من تحديد موقعك وحساب مواقيت الصلاة بدقة.",

@@ -10,6 +10,7 @@ import kotlinx.serialization.json.Json
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 
 /** Prayer times for one day, as returned by the AlAdhan API (24h "HH:mm"). */
 @Serializable
@@ -55,7 +56,7 @@ object PrayerApi {
                     connectTimeout = 12_000
                     readTimeout = 12_000
                     requestMethod = "GET"
-                    setRequestProperty("User-Agent", "BankOfFavors/1.6.0")
+                    setRequestProperty("User-Agent", "BankOfFavors/1.7.0")
                     setRequestProperty("Accept", "application/json")
                 }
                 try {
@@ -64,17 +65,12 @@ object PrayerApi {
                     if (code != HttpURLConnection.HTTP_OK) return@runCatching null
                     val body = conn.inputStream.bufferedReader().use { it.readText() }
                     DiagLog.d("prayer-api", "body ${body.length} chars")
-                    val t = JSONObject(body).getJSONObject("data").getJSONObject("timings")
-                    val parsed = DayPrayers(
-                        date = date,
-                        fajr = t.getString("Fajr").take(5),
-                        sunrise = t.getString("Sunrise").take(5),
-                        dhuhr = t.getString("Dhuhr").take(5),
-                        asr = t.getString("Asr").take(5),
-                        maghrib = t.getString("Maghrib").take(5),
-                        isha = t.getString("Isha").take(5)
-                    )
-                    DiagLog.d("prayer-api", "parsed ok fajr=${parsed.fajr} isha=${parsed.isha}")
+                    val parsed = parseDayPrayers(body, date)
+                    if (parsed != null) {
+                        DiagLog.d("prayer-api", "parsed ok fajr=${parsed.fajr} isha=${parsed.isha}")
+                    } else {
+                        DiagLog.d("prayer-api", "parse FAILED")
+                    }
                     parsed
                 } finally {
                     conn.disconnect()
@@ -86,6 +82,66 @@ object PrayerApi {
                 )
             }.getOrNull()
         }
+
+    /**
+     * Same timings but resolved by the API from a city + country name —
+     * no GPS needed. Used by the city-search flow.
+     */
+    suspend fun fetchTimingsByCity(
+        city: String,
+        country: String,
+        date: String,
+        method: Int = 5
+    ): DayPrayers? = withContext(Dispatchers.IO) {
+        DiagLog.d("prayer-api", "fetchByCity city=$city country=$country method=$method date=$date")
+        runCatching {
+            val q = "city=${URLEncoder.encode(city, "UTF-8")}" +
+                "&country=${URLEncoder.encode(country, "UTF-8")}&method=$method"
+            val url = URL("https://api.aladhan.com/v1/timingsByCity/$date?$q")
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                connectTimeout = 12_000
+                readTimeout = 12_000
+                requestMethod = "GET"
+                setRequestProperty("User-Agent", "BankOfFavors/1.7.0")
+                setRequestProperty("Accept", "application/json")
+            }
+            try {
+                val code = conn.responseCode
+                DiagLog.d("prayer-api", "byCity HTTP $code")
+                if (code != HttpURLConnection.HTTP_OK) return@runCatching null
+                val body = conn.inputStream.bufferedReader().use { it.readText() }
+                DiagLog.d("prayer-api", "byCity body ${body.length} chars")
+                val parsed = parseDayPrayers(body, date)
+                if (parsed != null) {
+                    DiagLog.d("prayer-api", "byCity parsed ok fajr=${parsed.fajr}")
+                } else {
+                    DiagLog.d("prayer-api", "byCity parse FAILED")
+                }
+                parsed
+            } finally {
+                conn.disconnect()
+            }
+        }.onFailure {
+            DiagLog.d(
+                "prayer-api",
+                "byCity FAILED ${it.javaClass.simpleName}: ${it.message?.take(160)}"
+            )
+        }.getOrNull()
+    }
+
+    /** Parse the AlAdhan "data.timings" object into a DayPrayers, or null. */
+    private fun parseDayPrayers(body: String, date: String): DayPrayers? = runCatching {
+        val t = JSONObject(body).getJSONObject("data").getJSONObject("timings")
+        DayPrayers(
+            date = date,
+            fajr = t.getString("Fajr").take(5),
+            sunrise = t.getString("Sunrise").take(5),
+            dhuhr = t.getString("Dhuhr").take(5),
+            asr = t.getString("Asr").take(5),
+            maghrib = t.getString("Maghrib").take(5),
+            isha = t.getString("Isha").take(5)
+        )
+    }.getOrNull()
 }
 
 /** Last-known device location via the framework LocationManager (no Play Services). */

@@ -13,6 +13,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,7 +22,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -32,6 +35,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -65,12 +69,14 @@ import com.kgsoft.favorsbank.data.FALLBACK_LNG
 import com.kgsoft.favorsbank.data.PrayerApi
 import com.kgsoft.favorsbank.data.PrayerLocation
 import com.kgsoft.favorsbank.data.PrefsRepository
+import com.kgsoft.favorsbank.data.WorldCity
 import com.kgsoft.favorsbank.data.dayPrayersFromJson
 import com.kgsoft.favorsbank.data.firstValue
 import com.kgsoft.favorsbank.data.formatPrayerTime
 import com.kgsoft.favorsbank.data.hhmmToMinutes
 import com.kgsoft.favorsbank.data.isLocationEnabled
 import com.kgsoft.favorsbank.data.isNetworkAvailable
+import com.kgsoft.favorsbank.data.searchCities
 import com.kgsoft.favorsbank.data.toJsonString
 import com.kgsoft.favorsbank.ui.Strings
 import com.kgsoft.favorsbank.ui.theme.GrainShape
@@ -102,6 +108,9 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
     var checkGpsOnResume by remember { mutableStateOf(false) }
     var isLoading by remember { mutableStateOf(false) }
     var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
+    var cityQuery by remember { mutableStateOf("") }
+    var cityResults by remember { mutableStateOf(searchCities("")) }
+    var savedCityLabel by remember { mutableStateOf<String?>(null) }
 
     /** Fetch timings for explicit coordinates and update state/cache. */
     suspend fun fetchFor(lat: Double, lng: Double) {
@@ -126,14 +135,57 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
 
     /** Silent refresh with the saved location (no loading indicator). */
     suspend fun refresh() {
+        val city = prefs.prayerCity.firstValue()
+        val country = prefs.prayerCountry.firstValue()
+        if (city != null && country != null) {
+            fetchForCity(city, country)
+            return
+        }
         val lat = prefs.prayerLat.firstValue() ?: return
         val lng = prefs.prayerLng.firstValue() ?: return
         fetchFor(lat, lng)
     }
 
+    /** Fetch timings for a city + country (no GPS) and update state/cache. */
+    suspend fun fetchForCity(cityEn: String, countryEn: String) {
+        if (!isNetworkAvailable(context)) {
+            DiagLog.d("prayer-ui", "fetchForCity: no network, keeping cache")
+            return // silent: keep showing cache
+        }
+        val today = SimpleDateFormat("dd-MM-yyyy", Locale.US).format(Date())
+        val method = APP_LANGS.find { it.code == Strings.langCode }?.prayerMethod ?: 5
+        val fresh = PrayerApi.fetchTimingsByCity(cityEn, countryEn, today, method)
+        if (fresh != null) {
+            prefs.cachePrayerTimes(today, fresh.toJsonString())
+            DiagLog.d("prayer-ui", "fetchForCity: ok, cached for $today")
+            prayers = fresh
+        } else {
+            DiagLog.d("prayer-ui", "fetchForCity: api returned null, keeping cache")
+        }
+    }
+
+    /** User picked a city from the search list: save it and fetch its times. */
+    suspend fun selectCity(city: WorldCity) {
+        DiagLog.d("prayer-ui", "city selected: ${city.cityEn}, ${city.countryEn}")
+        val label = "${city.cityAr}، ${city.countryAr}"
+        prefs.savePrayerCity(city.cityEn, city.countryEn, label)
+        savedCityLabel = label
+        askLocation = false
+        cityQuery = ""
+        cityResults = searchCities("")
+        isLoading = true
+        try {
+            fetchForCity(city.cityEn, city.countryEn)
+        } finally {
+            isLoading = false
+        }
+    }
+
     /** Save the Khartoum fallback and fetch its times with a loading indicator. */
     suspend fun useFallbackWithLoading() {
         DiagLog.d("prayer-ui", "using Khartoum fallback")
+        prefs.clearPrayerCity()
+        savedCityLabel = null
         prefs.savePrayerLocation(FALLBACK_LAT, FALLBACK_LNG)
         isLoading = true
         try {
@@ -154,6 +206,8 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
             val loc = PrayerLocation.fresh(context)
             val (lat, lng) = loc ?: (FALLBACK_LAT to FALLBACK_LNG)
             if (loc == null) DiagLog.d("prayer-ui", "locateAndFetch: no fix, fallback to Khartoum")
+            prefs.clearPrayerCity()
+            savedCityLabel = null
             prefs.savePrayerLocation(lat, lng)
             fetchFor(lat, lng)
         } finally {
@@ -211,7 +265,9 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
         } else {
             DiagLog.d("prayer-ui", "cache miss")
         }
-        if (prefs.prayerLat.firstValue() == null) {
+        savedCityLabel = prefs.prayerCityLabel.firstValue()
+        val hasCity = prefs.prayerCity.firstValue() != null
+        if (!hasCity && prefs.prayerLat.firstValue() == null) {
             DiagLog.d("prayer-ui", "no saved location, asking user")
             askLocation = true
         } else {
@@ -304,7 +360,36 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
                 }
             }
 
-            Spacer(Modifier.height(12.dp))
+            // Current city (tap to change it).
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        cityQuery = ""
+                        cityResults = searchCities("")
+                        askLocation = true
+                    }
+                    .padding(vertical = 4.dp)
+            ) {
+                Text(
+                    savedCityLabel ?: Strings.myCurrentLocation,
+                    fontFamily = Tajwal,
+                    fontSize = 13.sp,
+                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    Strings.changeCity,
+                    fontFamily = Tajwal,
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = GreenPrimary
+                )
+            }
+
+            Spacer(Modifier.height(8.dp))
 
             if (isLoading && prayers == null) {
                 // Shimmer placeholders while the location fix / API request runs.
@@ -354,7 +439,7 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
         }
     }
 
-    // First-run location prompt (asked once; the choice is saved).
+    // First-run location prompt: search a city, use GPS, or Khartoum fallback.
     if (askLocation) {
         AlertDialog(
             onDismissRequest = {
@@ -362,7 +447,63 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
                 scope.launch { useFallbackWithLoading() }
             },
             title = { Text(Strings.locationTitle, fontFamily = Tajwal, fontWeight = FontWeight.Bold) },
-            text = { Text(Strings.locationMessage, fontFamily = Tajwal) },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = cityQuery,
+                        onValueChange = {
+                            cityQuery = it
+                            cityResults = searchCities(it)
+                        },
+                        placeholder = { Text(Strings.searchCityHint, fontFamily = Tajwal) },
+                        singleLine = true,
+                        shape = RoundedCornerShape(50),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 220.dp)
+                    ) {
+                        items(cityResults) { city ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { scope.launch { selectCity(city) } }
+                                    .padding(vertical = 8.dp, horizontal = 4.dp)
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        city.cityAr,
+                                        fontFamily = Tajwal,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 15.sp
+                                    )
+                                    Text(
+                                        city.countryAr,
+                                        fontFamily = Tajwal,
+                                        fontSize = 12.sp,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                    )
+                                }
+                            }
+                        }
+                        if (cityResults.isEmpty()) {
+                            item {
+                                Text(
+                                    Strings.noCityResults,
+                                    fontFamily = Tajwal,
+                                    fontSize = 13.sp,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    modifier = Modifier.padding(8.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            },
             confirmButton = {
                 TextButton(onClick = {
                     askLocation = false

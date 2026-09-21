@@ -47,6 +47,9 @@ object PrefKeys {
     val PRAYER_LNG = stringPreferencesKey("lng")
     val PRAYER_DATE = stringPreferencesKey("date")
     val PRAYER_JSON = stringPreferencesKey("timings")
+    val PRAYER_CITY = stringPreferencesKey("city")
+    val PRAYER_COUNTRY = stringPreferencesKey("country")
+    val PRAYER_CITY_LABEL = stringPreferencesKey("cityLabel")
     // completed log
     val COMPLETED_LOG = stringPreferencesKey("log")
 }
@@ -150,6 +153,27 @@ class PrefsRepository(private val context: Context) {
             it[PrefKeys.PRAYER_DATE] = date
             it[PrefKeys.PRAYER_JSON] = json
         }
+
+    // ---------- prayer city (city-search flow, no GPS needed) ----------
+    val prayerCity: Flow<String?> =
+        context.prayerStore.data.map { it[PrefKeys.PRAYER_CITY] }
+    val prayerCountry: Flow<String?> =
+        context.prayerStore.data.map { it[PrefKeys.PRAYER_COUNTRY] }
+    val prayerCityLabel: Flow<String?> =
+        context.prayerStore.data.map { it[PrefKeys.PRAYER_CITY_LABEL] }
+
+    suspend fun savePrayerCity(cityEn: String, countryEn: String, labelAr: String) =
+        context.prayerStore.edit {
+            it[PrefKeys.PRAYER_CITY] = cityEn
+            it[PrefKeys.PRAYER_COUNTRY] = countryEn
+            it[PrefKeys.PRAYER_CITY_LABEL] = labelAr
+        }
+
+    suspend fun clearPrayerCity() = context.prayerStore.edit {
+        it.remove(PrefKeys.PRAYER_CITY)
+        it.remove(PrefKeys.PRAYER_COUNTRY)
+        it.remove(PrefKeys.PRAYER_CITY_LABEL)
+    }
 
     // ---------- completed tasks log ----------
     val completedLog: Flow<List<CompletedTask>> =
