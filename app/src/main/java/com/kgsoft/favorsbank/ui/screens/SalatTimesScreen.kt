@@ -1,9 +1,20 @@
 package com.kgsoft.favorsbank.ui.screens
 
 import android.Manifest
+import android.content.Intent
+import android.provider.Settings
+import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -24,6 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -33,11 +45,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import com.kgsoft.favorsbank.data.APP_LANGS
 import com.kgsoft.favorsbank.data.DayPrayers
@@ -50,6 +68,7 @@ import com.kgsoft.favorsbank.data.dayPrayersFromJson
 import com.kgsoft.favorsbank.data.firstValue
 import com.kgsoft.favorsbank.data.formatPrayerTime
 import com.kgsoft.favorsbank.data.hhmmToMinutes
+import com.kgsoft.favorsbank.data.isLocationEnabled
 import com.kgsoft.favorsbank.data.isNetworkAvailable
 import com.kgsoft.favorsbank.data.toJsonString
 import com.kgsoft.favorsbank.ui.Strings
@@ -78,12 +97,14 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
 
     var prayers by remember { mutableStateOf<DayPrayers?>(null) }
     var askLocation by remember { mutableStateOf(false) }
+    var askGps by remember { mutableStateOf(false) }
+    var checkGpsOnResume by remember { mutableStateOf(false) }
+    var isLoading by remember { mutableStateOf(false) }
     var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
 
-    suspend fun refresh() {
+    /** Fetch timings for explicit coordinates and update state/cache. */
+    suspend fun fetchFor(lat: Double, lng: Double) {
         if (!isNetworkAvailable(context)) return // silent: keep showing cache
-        val lat = prefs.prayerLat.firstValue() ?: return
-        val lng = prefs.prayerLng.firstValue() ?: return
         val today = SimpleDateFormat("dd-MM-yyyy", Locale.US).format(Date())
         // Calculation method follows the UI language's region
         // (Egypt for Arabs, Karachi for Urdu/Bengali, Diyanet for Turkish, ...).
@@ -96,15 +117,69 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
         // on failure: silent, keep cache
     }
 
+    /** Silent refresh with the saved location (no loading indicator). */
+    suspend fun refresh() {
+        val lat = prefs.prayerLat.firstValue() ?: return
+        val lng = prefs.prayerLng.firstValue() ?: return
+        fetchFor(lat, lng)
+    }
+
+    /** Save the Khartoum fallback and fetch its times with a loading indicator. */
+    suspend fun useFallbackWithLoading() {
+        prefs.savePrayerLocation(FALLBACK_LAT, FALLBACK_LNG)
+        isLoading = true
+        try {
+            fetchFor(FALLBACK_LAT, FALLBACK_LNG)
+        } finally {
+            isLoading = false
+        }
+    }
+
+    /**
+     * Full "use my location" flow: fresh GPS fix (with shimmer on screen),
+     * then API fetch. Falls back to Khartoum when no fix arrives.
+     */
+    suspend fun locateAndFetch() {
+        isLoading = true
+        try {
+            val loc = PrayerLocation.fresh(context)
+            val (lat, lng) = loc ?: (FALLBACK_LAT to FALLBACK_LNG)
+            prefs.savePrayerLocation(lat, lng)
+            fetchFor(lat, lng)
+        } finally {
+            isLoading = false
+        }
+    }
+
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         scope.launch {
-            val loc = if (granted) PrayerLocation.lastKnown(context) else null
-            val (lat, lng) = loc ?: (FALLBACK_LAT to FALLBACK_LNG)
-            prefs.savePrayerLocation(lat, lng)
-            refresh()
+            if (!granted) {
+                useFallbackWithLoading() // permission denied: Khartoum
+            } else if (isLocationEnabled(context)) {
+                locateAndFetch()
+            } else {
+                askGps = true // permission ok, but GPS is off: ask to enable it
+            }
         }
+    }
+
+    // When the user returns from the system location settings, retry the flow.
+    val activityLifecycle = (context as? ComponentActivity)?.lifecycle
+    DisposableEffect(activityLifecycle) {
+        if (activityLifecycle == null) return@DisposableEffect onDispose {}
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME && checkGpsOnResume) {
+                checkGpsOnResume = false
+                scope.launch {
+                    if (isLocationEnabled(context)) locateAndFetch()
+                    else useFallbackWithLoading()
+                }
+            }
+        }
+        activityLifecycle.addObserver(observer)
+        onDispose { activityLifecycle.removeObserver(observer) }
     }
 
     // Clock tick for the countdown.
@@ -213,6 +288,10 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
 
             Spacer(Modifier.height(12.dp))
 
+            if (isLoading && prayers == null) {
+                // Shimmer placeholders while the location fix / API request runs.
+                ShimmerPrayerList()
+            } else {
             LazyColumn(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
                 modifier = Modifier.fillMaxWidth()
@@ -253,6 +332,7 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
                     }
                 }
             }
+            }
         }
     }
 
@@ -261,10 +341,7 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
         AlertDialog(
             onDismissRequest = {
                 askLocation = false
-                scope.launch {
-                    prefs.savePrayerLocation(FALLBACK_LAT, FALLBACK_LNG)
-                    refresh()
-                }
+                scope.launch { useFallbackWithLoading() }
             },
             title = { Text(Strings.locationTitle, fontFamily = Tajwal, fontWeight = FontWeight.Bold) },
             text = { Text(Strings.locationMessage, fontFamily = Tajwal) },
@@ -279,14 +356,94 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
             dismissButton = {
                 TextButton(onClick = {
                     askLocation = false
-                    scope.launch {
-                        prefs.savePrayerLocation(FALLBACK_LAT, FALLBACK_LNG)
-                        refresh()
-                    }
+                    scope.launch { useFallbackWithLoading() }
                 }) {
                     Text(Strings.useKhartoum, fontFamily = Tajwal)
                 }
             }
         )
+    }
+
+    // GPS is off: ask the user to enable it, then continue on resume.
+    if (askGps) {
+        AlertDialog(
+            onDismissRequest = {
+                askGps = false
+                scope.launch { useFallbackWithLoading() }
+            },
+            title = { Text(Strings.gpsTitle, fontFamily = Tajwal, fontWeight = FontWeight.Bold) },
+            text = { Text(Strings.gpsMessage, fontFamily = Tajwal) },
+            confirmButton = {
+                TextButton(onClick = {
+                    askGps = false
+                    checkGpsOnResume = true
+                    context.startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                }) {
+                    Text(Strings.openSettings, fontFamily = Tajwal, color = GreenPrimary)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    askGps = false
+                    scope.launch { useFallbackWithLoading() }
+                }) {
+                    Text(Strings.cancel, fontFamily = Tajwal)
+                }
+            }
+        )
+    }
+}
+
+/** Animated shimmer brush for loading placeholders (theme-aware). */
+@Composable
+private fun shimmerBrush(): Brush {
+    val base = MaterialTheme.colorScheme.surfaceVariant
+    val shimmerColors = listOf(
+        base.copy(alpha = 0.9f),
+        base.copy(alpha = 0.35f),
+        base.copy(alpha = 0.9f)
+    )
+    val transition = rememberInfiniteTransition(label = "prayerShimmer")
+    val translate by transition.animateFloat(
+        initialValue = 0f,
+        targetValue = 1000f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 1300, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "prayerShimmerTranslate"
+    )
+    return Brush.linearGradient(
+        colors = shimmerColors,
+        start = Offset(translate - 600f, 0f),
+        end = Offset(translate, 0f)
+    )
+}
+
+/** Shimmer placeholder rows shown while prayer times are loading. */
+@Composable
+private fun ShimmerPrayerList() {
+    val brush = shimmerBrush()
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            Strings.loadingPrayerTimes,
+            fontFamily = Tajwal,
+            fontSize = 14.sp,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth()
+        )
+        repeat(6) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(52.dp)
+                    .clip(GrainShape)
+                    .background(brush)
+            )
+        }
     }
 }

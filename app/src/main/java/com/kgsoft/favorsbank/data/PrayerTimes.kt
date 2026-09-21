@@ -85,7 +85,67 @@ object PrayerLocation {
         }
         best?.let { it.latitude to it.longitude }
     }.getOrNull()
+
+    /**
+     * Fresh single location fix. Tries last-known first; if none, requests one
+     * update from the enabled providers and waits [timeoutMs] for a fix.
+     * Returns null when no fix arrives in time. Caller must hold a location
+     * permission before calling.
+     */
+    @SuppressLint("MissingPermission")
+    suspend fun fresh(
+        context: Context,
+        timeoutMs: Long = 20_000
+    ): Pair<Double, Double>? {
+        lastKnown(context)?.let { return it }
+        return runCatching {
+            val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+            val providers = lm.getProviders(true)
+                .filter { it == LocationManager.GPS_PROVIDER || it == LocationManager.NETWORK_PROVIDER }
+            if (providers.isEmpty()) return@runCatching null
+            kotlinx.coroutines.suspendCancellableCoroutine<Pair<Double, Double>?> { cont ->
+                val looper = android.os.Looper.getMainLooper()
+                val handler = android.os.Handler(looper)
+                var listener: android.location.LocationListener? = null
+                var timeout: Runnable? = null
+                fun stop() {
+                    listener?.let { runCatching { lm.removeUpdates(it) } }
+                    timeout?.let { handler.removeCallbacks(it) }
+                }
+                listener = object : android.location.LocationListener {
+                    override fun onLocationChanged(loc: android.location.Location) {
+                        if (cont.isActive) {
+                            stop()
+                            cont.resume(loc.latitude to loc.longitude)
+                        }
+                    }
+                    override fun onProviderEnabled(provider: String) {}
+                    override fun onProviderDisabled(provider: String) {}
+                }
+                timeout = Runnable {
+                    stop()
+                    if (cont.isActive) cont.resume(null)
+                }
+                runCatching {
+                    for (p in providers) lm.requestLocationUpdates(p, 0L, 0f, listener!!, looper)
+                }.onFailure {
+                    stop()
+                    if (cont.isActive) cont.resume(null)
+                    return@suspendCancellableCoroutine
+                }
+                cont.invokeOnCancellation { stop() }
+                handler.postDelayed(timeout!!, timeoutMs)
+            }
+        }.getOrNull()
+    }
 }
+
+/** True when at least one location provider (GPS or network) is enabled. */
+fun isLocationEnabled(context: Context): Boolean = runCatching {
+    val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+    lm.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+        lm.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+}.getOrDefault(false)
 
 /** True when there is an active network connection. */
 fun isNetworkAvailable(context: Context): Boolean = runCatching {

@@ -142,6 +142,13 @@ object Strings {
     )
     val useMyLocation get() = s("useMyLocation", "استخدام موقعي", "Use my location")
     val useKhartoum get() = s("useKhartoum", "الخرطوم (افتراضي)", "Khartoum (default)")
+    val gpsTitle get() = s("gpsTitle", "تفعيل خدمة الموقع", "Enable location services")
+    val gpsMessage get() = s("gpsMessage",
+        "خدمة الموقع (GPS) غير مفعّلة على هاتفك. يرجى تفعيلها من الإعدادات حتى نتمكن من تحديد موقعك وحساب مواقيت الصلاة بدقة.",
+        "Location services (GPS) are turned off on your phone. Please enable them in Settings so we can determine your location and calculate accurate prayer times."
+    )
+    val openSettings get() = s("openSettings", "فتح الإعدادات", "Open settings")
+    val loadingPrayerTimes get() = s("loadingPrayerTimes", "جاري تحميل مواقيت الصلاة...", "Loading prayer times...")
 
     // completed tasks log
     val completedLog get() = s("completedLog", "سجل المهام المنجزة", "Completed tasks log")
