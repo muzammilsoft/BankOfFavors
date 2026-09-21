@@ -42,6 +42,10 @@ const val FALLBACK_LNG = 32.5599
 object PrayerApi {
     suspend fun fetchTimings(lat: Double, lng: Double, date: String, method: Int = 5): DayPrayers? =
         withContext(Dispatchers.IO) {
+            DiagLog.d(
+                "prayer-api",
+                "fetch lat=${"%.2f".format(lat)} lng=${"%.2f".format(lng)} method=$method date=$date"
+            )
             runCatching {
                 val url = URL(
                     "https://api.aladhan.com/v1/timings/$date" +
@@ -51,12 +55,17 @@ object PrayerApi {
                     connectTimeout = 12_000
                     readTimeout = 12_000
                     requestMethod = "GET"
+                    setRequestProperty("User-Agent", "BankOfFavors/1.6.0")
+                    setRequestProperty("Accept", "application/json")
                 }
                 try {
-                    if (conn.responseCode != HttpURLConnection.HTTP_OK) return@runCatching null
+                    val code = conn.responseCode
+                    DiagLog.d("prayer-api", "HTTP $code")
+                    if (code != HttpURLConnection.HTTP_OK) return@runCatching null
                     val body = conn.inputStream.bufferedReader().use { it.readText() }
+                    DiagLog.d("prayer-api", "body ${body.length} chars")
                     val t = JSONObject(body).getJSONObject("data").getJSONObject("timings")
-                    DayPrayers(
+                    val parsed = DayPrayers(
                         date = date,
                         fajr = t.getString("Fajr").take(5),
                         sunrise = t.getString("Sunrise").take(5),
@@ -65,9 +74,16 @@ object PrayerApi {
                         maghrib = t.getString("Maghrib").take(5),
                         isha = t.getString("Isha").take(5)
                     )
+                    DiagLog.d("prayer-api", "parsed ok fajr=${parsed.fajr} isha=${parsed.isha}")
+                    parsed
                 } finally {
                     conn.disconnect()
                 }
+            }.onFailure {
+                DiagLog.d(
+                    "prayer-api",
+                    "FAILED ${it.javaClass.simpleName}: ${it.message?.take(160)}"
+                )
             }.getOrNull()
         }
 }
@@ -97,11 +113,16 @@ object PrayerLocation {
         context: Context,
         timeoutMs: Long = 20_000
     ): Pair<Double, Double>? {
-        lastKnown(context)?.let { return it }
+        lastKnown(context)?.let {
+            DiagLog.d("prayer-loc", "last-known fix lat=${"%.2f".format(it.first)}")
+            return it
+        }
+        DiagLog.d("prayer-loc", "no last-known fix, requesting fresh update")
         return runCatching {
             val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
             val providers = lm.getProviders(true)
                 .filter { it == LocationManager.GPS_PROVIDER || it == LocationManager.NETWORK_PROVIDER }
+            DiagLog.d("prayer-loc", "enabled providers: $providers")
             if (providers.isEmpty()) return@runCatching null
             kotlinx.coroutines.suspendCancellableCoroutine<Pair<Double, Double>?> { cont ->
                 val looper = android.os.Looper.getMainLooper()
@@ -116,6 +137,11 @@ object PrayerLocation {
                     override fun onLocationChanged(loc: android.location.Location) {
                         if (cont.isActive) {
                             stop()
+                            DiagLog.d(
+                                "prayer-loc",
+                                "fresh fix lat=${"%.2f".format(loc.latitude)} " +
+                                    "acc=${loc.accuracy.toInt()}m"
+                            )
                             cont.resume(loc.latitude to loc.longitude, null)
                         }
                     }
@@ -124,11 +150,13 @@ object PrayerLocation {
                 }
                 timeout = Runnable {
                     stop()
+                    DiagLog.d("prayer-loc", "fresh fix TIMEOUT after ${timeoutMs}ms")
                     if (cont.isActive) cont.resume(null, null)
                 }
                 runCatching {
                     for (p in providers) lm.requestLocationUpdates(p, 0L, 0f, listener!!, looper)
                 }.onFailure {
+                    DiagLog.d("prayer-loc", "requestLocationUpdates FAILED: ${it.message?.take(120)}")
                     stop()
                     if (cont.isActive) cont.resume(null, null)
                     return@suspendCancellableCoroutine
@@ -136,6 +164,8 @@ object PrayerLocation {
                 cont.invokeOnCancellation { stop() }
                 handler.postDelayed(timeout!!, timeoutMs)
             }
+        }.onFailure {
+            DiagLog.d("prayer-loc", "fresh() FAILED ${it.javaClass.simpleName}: ${it.message?.take(120)}")
         }.getOrNull()
     }
 }

@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import com.kgsoft.favorsbank.data.DiagLog
 import com.kgsoft.favorsbank.data.PrefsRepository
 import com.kgsoft.favorsbank.ui.BankApp
 import com.kgsoft.favorsbank.ui.Routes
@@ -17,6 +18,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        DiagLog.init(applicationContext)
         val prefs = PrefsRepository(applicationContext)
         // Deep-link target for notification taps (the original opened TodoActivity).
         val startRoute = when (intent?.getStringExtra("route")) {

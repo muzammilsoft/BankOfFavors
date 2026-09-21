@@ -59,6 +59,7 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import com.kgsoft.favorsbank.data.APP_LANGS
 import com.kgsoft.favorsbank.data.DayPrayers
+import com.kgsoft.favorsbank.data.DiagLog
 import com.kgsoft.favorsbank.data.FALLBACK_LAT
 import com.kgsoft.favorsbank.data.FALLBACK_LNG
 import com.kgsoft.favorsbank.data.PrayerApi
@@ -104,7 +105,10 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
 
     /** Fetch timings for explicit coordinates and update state/cache. */
     suspend fun fetchFor(lat: Double, lng: Double) {
-        if (!isNetworkAvailable(context)) return // silent: keep showing cache
+        if (!isNetworkAvailable(context)) {
+            DiagLog.d("prayer-ui", "fetchFor: no network, keeping cache")
+            return // silent: keep showing cache
+        }
         val today = SimpleDateFormat("dd-MM-yyyy", Locale.US).format(Date())
         // Calculation method follows the UI language's region
         // (Egypt for Arabs, Karachi for Urdu/Bengali, Diyanet for Turkish, ...).
@@ -112,7 +116,10 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
         val fresh = PrayerApi.fetchTimings(lat, lng, today, method)
         if (fresh != null) {
             prefs.cachePrayerTimes(today, fresh.toJsonString())
+            DiagLog.d("prayer-ui", "fetchFor: ok, cached for $today")
             prayers = fresh
+        } else {
+            DiagLog.d("prayer-ui", "fetchFor: api returned null, keeping cache")
         }
         // on failure: silent, keep cache
     }
@@ -126,6 +133,7 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
 
     /** Save the Khartoum fallback and fetch its times with a loading indicator. */
     suspend fun useFallbackWithLoading() {
+        DiagLog.d("prayer-ui", "using Khartoum fallback")
         prefs.savePrayerLocation(FALLBACK_LAT, FALLBACK_LNG)
         isLoading = true
         try {
@@ -140,10 +148,12 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
      * then API fetch. Falls back to Khartoum when no fix arrives.
      */
     suspend fun locateAndFetch() {
+        DiagLog.d("prayer-ui", "locateAndFetch: start")
         isLoading = true
         try {
             val loc = PrayerLocation.fresh(context)
             val (lat, lng) = loc ?: (FALLBACK_LAT to FALLBACK_LNG)
+            if (loc == null) DiagLog.d("prayer-ui", "locateAndFetch: no fix, fallback to Khartoum")
             prefs.savePrayerLocation(lat, lng)
             fetchFor(lat, lng)
         } finally {
@@ -154,12 +164,14 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { granted ->
+        DiagLog.d("prayer-ui", "location permission granted=$granted")
         scope.launch {
             if (!granted) {
                 useFallbackWithLoading() // permission denied: Khartoum
             } else if (isLocationEnabled(context)) {
                 locateAndFetch()
             } else {
+                DiagLog.d("prayer-ui", "permission ok but location providers off")
                 askGps = true // permission ok, but GPS is off: ask to enable it
             }
         }
@@ -193,8 +205,14 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
     // Load cache, then refresh silently when online; ask location once.
     LaunchedEffect(Unit) {
         val cachedJson = prefs.cachedPrayerJson.firstValue()
-        if (cachedJson != null) prayers = dayPrayersFromJson(cachedJson)
+        if (cachedJson != null) {
+            prayers = dayPrayersFromJson(cachedJson)
+            DiagLog.d("prayer-ui", "cache hit, prayers=${prayers != null}")
+        } else {
+            DiagLog.d("prayer-ui", "cache miss")
+        }
         if (prefs.prayerLat.firstValue() == null) {
+            DiagLog.d("prayer-ui", "no saved location, asking user")
             askLocation = true
         } else {
             refresh()

@@ -87,6 +87,18 @@ object Strings {
     val toastProphet get() = s("toastProphet", "الصلاة على النبي", "Salawat reminders")
     val toastAll get() = s("toastAll", "الكل", "All")
     val reportBug get() = s("reportBug", "الإبلاغ عن خطأ", "Report a bug")
+    val diagLogTitle get() = s("diagLogTitle", "سجل التشخيص", "Diagnostic log")
+    val diagLogSubtitle get() = s(
+        "diagLogSubtitle",
+        "ماذا فعل التطبيق خلال آخر 24 ساعة",
+        "What the app did in the last 24 hours"
+    )
+    val copyLog get() = s("copyLog", "نسخ", "Copy")
+    val refreshLog get() = s("refreshLog", "تحديث", "Refresh")
+    val clearLog get() = s("clearLog", "مسح", "Clear")
+    val logCopied get() = s("logCopied", "تم نسخ السجل", "Log copied")
+    val logCleared get() = s("logCleared", "تم مسح السجل", "Log cleared")
+    val noLogEntries get() = s("noLogEntries", "لا توجد إدخالات بعد", "No entries yet")
     val enabled get() = s("enabled", "مفعلة", "On")
     val disabled get() = s("disabled", "غير مفعلة", "Off")
 
