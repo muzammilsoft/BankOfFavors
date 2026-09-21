@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.AlertDialog
@@ -133,19 +134,6 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
         // on failure: silent, keep cache
     }
 
-    /** Silent refresh with the saved location (no loading indicator). */
-    suspend fun refresh() {
-        val city = prefs.prayerCity.firstValue()
-        val country = prefs.prayerCountry.firstValue()
-        if (city != null && country != null) {
-            fetchForCity(city, country)
-            return
-        }
-        val lat = prefs.prayerLat.firstValue() ?: return
-        val lng = prefs.prayerLng.firstValue() ?: return
-        fetchFor(lat, lng)
-    }
-
     /** Fetch timings for a city + country (no GPS) and update state/cache. */
     suspend fun fetchForCity(cityEn: String, countryEn: String) {
         if (!isNetworkAvailable(context)) {
@@ -162,6 +150,19 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
         } else {
             DiagLog.d("prayer-ui", "fetchForCity: api returned null, keeping cache")
         }
+    }
+
+    /** Silent refresh with the saved location (no loading indicator). */
+    suspend fun refresh() {
+        val city = prefs.prayerCity.firstValue()
+        val country = prefs.prayerCountry.firstValue()
+        if (city != null && country != null) {
+            fetchForCity(city, country)
+            return
+        }
+        val lat = prefs.prayerLat.firstValue() ?: return
+        val lng = prefs.prayerLng.firstValue() ?: return
+        fetchFor(lat, lng)
     }
 
     /** User picked a city from the search list: save it and fetch its times. */
