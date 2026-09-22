@@ -165,6 +165,36 @@ object Strings {
     )
     val openSettings get() = s("openSettings", "فتح الإعدادات", "Open settings")
     val loadingPrayerTimes get() = s("loadingPrayerTimes", "جاري تحميل مواقيت الصلاة...", "Loading prayer times...")
+    val searchingCities get() = s("searchingCities", "جاري البحث…", "Searching…")
+
+    // prayer times settings (repair + manual times)
+    val prayerSettings get() = s("prayerSettings", "إعدادات مواقيت الصلاة", "Prayer times settings")
+    val repairPrayerTimes get() = s("repairPrayerTimes", "إصلاح مواقيت الصلاة", "Repair prayer times")
+    val repairPrayerTimesDesc get() = s("repairPrayerTimesDesc",
+        "يمسح المواقيت المحفوظة ويعيد تحميلها من الإنترنت فوراً",
+        "Clears saved times and reloads them from the internet now"
+    )
+    val repair get() = s("repair", "إصلاح", "Repair")
+    val repairing get() = s("repairing", "جاري الإصلاح…", "Repairing…")
+    val repairDone get() = s("repairDone", "تم تحميل المواقيت بنجاح", "Prayer times loaded successfully")
+    val repairFailed get() = s("repairFailed",
+        "تعذّر التحميل — تحقق من اتصال الإنترنت وحاول مجدداً",
+        "Couldn't load — check your internet connection and try again"
+    )
+    val manualTimes get() = s("manualTimes", "تحديد المواقيت يدوياً", "Set times manually")
+    val manualTimesDesc get() = s("manualTimesDesc",
+        "تُعرض هذه المواقيت بدلاً من مواقيت الإنترنت (بصيغة 24 ساعة، مثال: 04:30)",
+        "These times are shown instead of internet times (24-hour format, e.g. 04:30)"
+    )
+    val saveManualTimes get() = s("saveManualTimes", "حفظ المواقيت", "Save times")
+    val clearManualTimes get() = s("clearManualTimes", "إلغاء التحديد اليدوي", "Clear manual times")
+    val manualSaved get() = s("manualSaved", "تم حفظ المواقيت اليدوية", "Manual times saved")
+    val manualCleared get() = s("manualCleared", "تم إلغاء المواقيت اليدوية", "Manual times cleared")
+    val manualBadge get() = s("manualBadge", "يدوية", "manual")
+    val invalidTime get() = s("invalidTime", "صيغة غير صحيحة", "Invalid format")
+    val changeCityTitle get() = s("changeCityTitle", "تغيير المدينة", "Change city")
+    val citySaved get() = s("citySaved", "تم حفظ المدينة", "City saved")
+    val save get() = s("save", "حفظ", "Save")
 
     // completed tasks log
     val completedLog get() = s("completedLog", "سجل المهام المنجزة", "Completed tasks log")

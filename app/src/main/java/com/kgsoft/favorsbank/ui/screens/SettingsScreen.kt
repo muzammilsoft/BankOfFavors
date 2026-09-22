@@ -234,6 +234,37 @@ fun SettingsScreen(navController: NavController, prefs: PrefsRepository) {
                 elevation = CardDefaults.cardElevation(2.dp),
                 modifier = Modifier
                     .fillMaxWidth()
+                    .clickable { navController.navigate(Routes.PRAYER_SETTINGS) }
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(16.dp)
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            Strings.prayerSettings,
+                            fontFamily = Tajwal,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 16.sp
+                        )
+                        Text(
+                            Strings.repairPrayerTimesDesc,
+                            fontFamily = Tajwal,
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
+                    }
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Card(
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(2.dp),
+                modifier = Modifier
+                    .fillMaxWidth()
                     .clickable { navController.navigate(Routes.REPORT) }
             ) {
                 Row(

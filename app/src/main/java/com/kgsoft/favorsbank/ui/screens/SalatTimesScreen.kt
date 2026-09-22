@@ -67,17 +67,17 @@ import com.kgsoft.favorsbank.data.DayPrayers
 import com.kgsoft.favorsbank.data.DiagLog
 import com.kgsoft.favorsbank.data.FALLBACK_LAT
 import com.kgsoft.favorsbank.data.FALLBACK_LNG
+import com.kgsoft.favorsbank.data.GeoApi
+import com.kgsoft.favorsbank.data.GeoCity
 import com.kgsoft.favorsbank.data.PrayerApi
 import com.kgsoft.favorsbank.data.PrayerLocation
 import com.kgsoft.favorsbank.data.PrefsRepository
-import com.kgsoft.favorsbank.data.WorldCity
 import com.kgsoft.favorsbank.data.dayPrayersFromJson
 import com.kgsoft.favorsbank.data.firstValue
 import com.kgsoft.favorsbank.data.formatPrayerTime
 import com.kgsoft.favorsbank.data.hhmmToMinutes
 import com.kgsoft.favorsbank.data.isLocationEnabled
 import com.kgsoft.favorsbank.data.isNetworkAvailable
-import com.kgsoft.favorsbank.data.searchCities
 import com.kgsoft.favorsbank.data.toJsonString
 import com.kgsoft.favorsbank.ui.Strings
 import com.kgsoft.favorsbank.ui.theme.GrainShape
@@ -110,8 +110,11 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
     var isLoading by remember { mutableStateOf(false) }
     var nowMillis by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var cityQuery by remember { mutableStateOf("") }
-    var cityResults by remember { mutableStateOf(searchCities("")) }
+    var cityResults by remember { mutableStateOf<List<GeoCity>>(emptyList()) }
+    var searchingCities by remember { mutableStateOf(false) }
+    var citySearchJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     var savedCityLabel by remember { mutableStateOf<String?>(null) }
+    var isManual by remember { mutableStateOf(false) }
 
     /** Fetch timings for explicit coordinates and update state/cache. */
     suspend fun fetchFor(lat: Double, lng: Double) {
@@ -152,33 +155,54 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
         }
     }
 
-    /** Silent refresh with the saved location (no loading indicator). */
+    /** Silent refresh with the saved place: coordinates first, legacy city second. */
     suspend fun refresh() {
+        val lat = prefs.prayerLat.firstValue()
+        val lng = prefs.prayerLng.firstValue()
+        if (lat != null && lng != null) {
+            fetchFor(lat, lng)
+            return
+        }
+        // Legacy v1.7.0 installs saved city + country instead of coordinates.
         val city = prefs.prayerCity.firstValue()
         val country = prefs.prayerCountry.firstValue()
         if (city != null && country != null) {
             fetchForCity(city, country)
-            return
         }
-        val lat = prefs.prayerLat.firstValue() ?: return
-        val lng = prefs.prayerLng.firstValue() ?: return
-        fetchFor(lat, lng)
     }
 
-    /** User picked a city from the search list: save it and fetch its times. */
-    suspend fun selectCity(city: WorldCity) {
-        DiagLog.d("prayer-ui", "city selected: ${city.cityEn}, ${city.countryEn}")
-        val label = "${city.cityAr}، ${city.countryAr}"
-        prefs.savePrayerCity(city.cityEn, city.countryEn, label)
+    /** User picked a city from the online search: save coords + label, fetch times. */
+    suspend fun selectCity(city: GeoCity) {
+        DiagLog.d("prayer-ui", "city selected: ${city.name} lat=${city.lat}")
+        val label = if (city.country.isNotBlank()) "${city.name}، ${city.country}"
+        else city.name
+        prefs.savePrayerPlace(city.lat, city.lng, label)
         savedCityLabel = label
         askLocation = false
         cityQuery = ""
-        cityResults = searchCities("")
+        cityResults = emptyList()
         isLoading = true
         try {
-            fetchForCity(city.cityEn, city.countryEn)
+            fetchFor(city.lat, city.lng)
         } finally {
             isLoading = false
+        }
+    }
+
+    /** Debounced online city search (every city in the world, no stored list). */
+    fun onCityQueryChanged(q: String) {
+        cityQuery = q
+        citySearchJob?.cancel()
+        if (q.trim().length < 2) {
+            cityResults = emptyList()
+            searchingCities = false
+            return
+        }
+        searchingCities = true
+        citySearchJob = scope.launch {
+            delay(450)
+            cityResults = GeoApi.searchCities(q)
+            searchingCities = false
         }
     }
 
@@ -257,8 +281,18 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
         }
     }
 
-    // Load cache, then refresh silently when online; ask location once.
+    // Load manual override (if the user set times by hand), else cache,
+    // then refresh silently when online; ask location once.
     LaunchedEffect(Unit) {
+        val manualJson = prefs.manualPrayerJson.firstValue()
+        val manualTimes = manualJson?.let { dayPrayersFromJson(it) }
+        if (manualTimes != null) {
+            DiagLog.d("prayer-ui", "manual override active")
+            prayers = manualTimes
+            isManual = true
+            savedCityLabel = prefs.prayerCityLabel.firstValue()
+            return@LaunchedEffect
+        }
         val cachedJson = prefs.cachedPrayerJson.firstValue()
         if (cachedJson != null) {
             prayers = dayPrayersFromJson(cachedJson)
@@ -267,8 +301,9 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
             DiagLog.d("prayer-ui", "cache miss")
         }
         savedCityLabel = prefs.prayerCityLabel.firstValue()
-        val hasCity = prefs.prayerCity.firstValue() != null
-        if (!hasCity && prefs.prayerLat.firstValue() == null) {
+        val hasPlace = prefs.prayerLat.firstValue() != null ||
+            prefs.prayerCity.firstValue() != null
+        if (!hasPlace) {
             DiagLog.d("prayer-ui", "no saved location, asking user")
             askLocation = true
         } else {
@@ -361,7 +396,7 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
                 }
             }
 
-            // Current city (tap to change it).
+            // Current city (tap to change it). Manual override gets a badge.
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center,
@@ -369,13 +404,14 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
                     .fillMaxWidth()
                     .clickable {
                         cityQuery = ""
-                        cityResults = searchCities("")
+                        cityResults = emptyList()
                         askLocation = true
                     }
                     .padding(vertical = 4.dp)
             ) {
                 Text(
-                    savedCityLabel ?: Strings.myCurrentLocation,
+                    (savedCityLabel ?: Strings.myCurrentLocation) +
+                        if (isManual) " (${Strings.manualBadge})" else "",
                     fontFamily = Tajwal,
                     fontSize = 13.sp,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
@@ -452,16 +488,22 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
                 Column {
                     OutlinedTextField(
                         value = cityQuery,
-                        onValueChange = {
-                            cityQuery = it
-                            cityResults = searchCities(it)
-                        },
+                        onValueChange = ::onCityQueryChanged,
                         placeholder = { Text(Strings.searchCityHint, fontFamily = Tajwal) },
                         singleLine = true,
                         shape = RoundedCornerShape(50),
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(Modifier.height(8.dp))
+                    if (searchingCities) {
+                        Text(
+                            Strings.searchingCities,
+                            fontFamily = Tajwal,
+                            fontSize = 13.sp,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(8.dp)
+                        )
+                    }
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -477,21 +519,26 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
-                                        city.cityAr,
+                                        city.name,
                                         fontFamily = Tajwal,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 15.sp
                                     )
-                                    Text(
-                                        city.countryAr,
-                                        fontFamily = Tajwal,
-                                        fontSize = 12.sp,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                                    )
+                                    val sub = listOf(city.admin1, city.country)
+                                        .filter { it.isNotBlank() }
+                                        .joinToString("، ")
+                                    if (sub.isNotBlank()) {
+                                        Text(
+                                            sub,
+                                            fontFamily = Tajwal,
+                                            fontSize = 12.sp,
+                                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                                        )
+                                    }
                                 }
                             }
                         }
-                        if (cityResults.isEmpty()) {
+                        if (!searchingCities && cityResults.isEmpty() && cityQuery.trim().length >= 2) {
                             item {
                                 Text(
                                     Strings.noCityResults,

@@ -144,6 +144,71 @@ object PrayerApi {
     }.getOrNull()
 }
 
+/** One city returned by the geocoding API. */
+data class GeoCity(
+    val name: String,
+    val country: String,
+    val admin1: String = "",
+    val lat: Double,
+    val lng: Double
+)
+
+/**
+ * Open-Meteo geocoding API (https://open-meteo.com/en/docs/geocoding-api):
+ * free, no key, covers every city in the world with Arabic names.
+ * Used instead of a hardcoded city list, so prayer times are correct
+ * per city (times differ between cities of the same country) and no
+ * city database is stored in the app.
+ * Returns an empty list on any failure — callers show "no results".
+ */
+object GeoApi {
+    suspend fun searchCities(query: String): List<GeoCity> = withContext(Dispatchers.IO) {
+        if (query.trim().length < 2) return@withContext emptyList()
+        DiagLog.d("geo-api", "search q=$query")
+        runCatching {
+            val q = URLEncoder.encode(query.trim(), "UTF-8")
+            val url = URL(
+                "https://geocoding-api.open-meteo.com/v1/search" +
+                    "?name=$q&count=10&language=ar&format=json"
+            )
+            val conn = (url.openConnection() as HttpURLConnection).apply {
+                connectTimeout = 12_000
+                readTimeout = 12_000
+                requestMethod = "GET"
+                setRequestProperty("User-Agent", "BankOfFavors/1.8.0")
+                setRequestProperty("Accept", "application/json")
+            }
+            try {
+                val code = conn.responseCode
+                DiagLog.d("geo-api", "HTTP $code")
+                if (code != HttpURLConnection.HTTP_OK) return@runCatching emptyList<GeoCity>()
+                val body = conn.inputStream.bufferedReader().use { it.readText() }
+                val arr = JSONObject(body).optJSONArray("results")
+                    ?: return@runCatching emptyList<GeoCity>()
+                val out = ArrayList<GeoCity>(arr.length())
+                for (i in 0 until arr.length()) {
+                    val o = arr.getJSONObject(i)
+                    out.add(
+                        GeoCity(
+                            name = o.optString("name"),
+                            country = o.optString("country", ""),
+                            admin1 = o.optString("admin1", ""),
+                            lat = o.optDouble("latitude"),
+                            lng = o.optDouble("longitude")
+                        )
+                    )
+                }
+                DiagLog.d("geo-api", "found ${out.size}")
+                out
+            } finally {
+                conn.disconnect()
+            }
+        }.onFailure {
+            DiagLog.d("geo-api", "search FAILED ${it.javaClass.simpleName}: ${it.message?.take(120)}")
+        }.getOrDefault(emptyList())
+    }
+}
+
 /** Last-known device location via the framework LocationManager (no Play Services). */
 object PrayerLocation {
     @SuppressLint("MissingPermission")

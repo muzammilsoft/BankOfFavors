@@ -53,6 +53,7 @@ object Routes {
     const val ABOUT = "about"
     const val REPORT = "report"
     const val DIAGLOG = "diaglog"
+    const val PRAYER_SETTINGS = "prayer_settings"
 
     fun sibha(zikr: String? = null) =
         if (zikr.isNullOrBlank()) "sibha" else "sibha?zikr=${java.net.URLEncoder.encode(zikr, "UTF-8")}"
@@ -134,6 +135,7 @@ fun BankApp(prefs: PrefsRepository, startRoute: String = Routes.SPLASH) {
             composable(Routes.ABOUT) { AboutScreen(navController) }
             composable(Routes.REPORT) { ReportBugsScreen(navController) }
             composable(Routes.DIAGLOG) { DiagLogScreen(navController) }
+            composable(Routes.PRAYER_SETTINGS) { PrayerSettingsScreen(navController, prefs) }
         }
         } // Surface: theme background behind every screen
         }

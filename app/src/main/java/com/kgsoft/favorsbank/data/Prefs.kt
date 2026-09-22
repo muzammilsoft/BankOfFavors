@@ -50,6 +50,7 @@ object PrefKeys {
     val PRAYER_CITY = stringPreferencesKey("city")
     val PRAYER_COUNTRY = stringPreferencesKey("country")
     val PRAYER_CITY_LABEL = stringPreferencesKey("cityLabel")
+    val PRAYER_MANUAL = stringPreferencesKey("manualTimings")
     // completed log
     val COMPLETED_LOG = stringPreferencesKey("log")
 }
@@ -174,6 +175,35 @@ class PrefsRepository(private val context: Context) {
         it.remove(PrefKeys.PRAYER_COUNTRY)
         it.remove(PrefKeys.PRAYER_CITY_LABEL)
     }
+
+    /**
+     * Saves a place picked from the online city search: coordinates plus the
+     * display label. Clears any legacy city/country pair so coordinates win.
+     */
+    suspend fun savePrayerPlace(lat: Double, lng: Double, label: String) =
+        context.prayerStore.edit {
+            it[PrefKeys.PRAYER_LAT] = lat.toString()
+            it[PrefKeys.PRAYER_LNG] = lng.toString()
+            it[PrefKeys.PRAYER_CITY_LABEL] = label
+            it.remove(PrefKeys.PRAYER_CITY)
+            it.remove(PrefKeys.PRAYER_COUNTRY)
+        }
+
+    /** Clears the cached timings so the next load is forced to fetch fresh ones. */
+    suspend fun clearPrayerCache() = context.prayerStore.edit {
+        it.remove(PrefKeys.PRAYER_DATE)
+        it.remove(PrefKeys.PRAYER_JSON)
+    }
+
+    // ---------- manual prayer times (user-set override) ----------
+    val manualPrayerJson: Flow<String?> =
+        context.prayerStore.data.map { it[PrefKeys.PRAYER_MANUAL] }
+
+    suspend fun saveManualPrayerTimes(json: String) =
+        context.prayerStore.edit { it[PrefKeys.PRAYER_MANUAL] = json }
+
+    suspend fun clearManualPrayerTimes() =
+        context.prayerStore.edit { it.remove(PrefKeys.PRAYER_MANUAL) }
 
     // ---------- completed tasks log ----------
     val completedLog: Flow<List<CompletedTask>> =
