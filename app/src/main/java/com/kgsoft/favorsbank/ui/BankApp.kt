@@ -29,6 +29,7 @@ import com.kgsoft.favorsbank.ui.screens.DiagLogScreen
 import com.kgsoft.favorsbank.ui.screens.HomeScreen
 import com.kgsoft.favorsbank.ui.screens.LoginScreen
 import com.kgsoft.favorsbank.ui.screens.MyAccountScreen
+import com.kgsoft.favorsbank.ui.screens.PrayerSettingsScreen
 import com.kgsoft.favorsbank.ui.screens.ReportBugsScreen
 import com.kgsoft.favorsbank.ui.screens.SalatTimesScreen
 import com.kgsoft.favorsbank.ui.screens.SetLanguageScreen
