@@ -194,7 +194,6 @@ object Strings {
     val invalidTime get() = s("invalidTime", "صيغة غير صحيحة", "Invalid format")
     val changeCityTitle get() = s("changeCityTitle", "تغيير المدينة", "Change city")
     val citySaved get() = s("citySaved", "تم حفظ المدينة", "City saved")
-    val save get() = s("save", "حفظ", "Save")
 
     // completed tasks log
     val completedLog get() = s("completedLog", "سجل المهام المنجزة", "Completed tasks log")
