@@ -37,6 +37,8 @@ object Strings {
     val share get() = s("share", "مشاركة", "Share")
     val salatTimes get() = s("salatTimes", "مواقيت الصلاة", "Prayer times")
     val azkar get() = s("azkar", "أذكار الصباح والمساء", "Morning & evening azkar")
+    val morningAzkar get() = s("morningAzkar", "أذكار الصباح", "Morning azkar")
+    val eveningAzkar get() = s("eveningAzkar", "أذكار المساء", "Evening azkar")
     val sibha get() = s("sibha", "السبحة", "Tasbih")
 
     // drawer

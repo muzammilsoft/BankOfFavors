@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -79,9 +81,9 @@ private data class ToolCard(
  * Home screen: balance header, rotating Quran verse, 2-column tool grid
  * and the navigation drawer. Mirrors MainActivity.
  *
- * The tool buttons are a fixed 2-column grid (icon over text) with no
- * scrolling — everything fits on one screen. The rotating zikr reminder
- * sits at the bottom as the screen footer.
+ * The tool buttons are a 2-column grid (icon over text) inside a vertical
+ * scroll, so every card stays reachable on small screens. The rotating
+ * zikr reminder sits at the bottom as the screen footer.
  */
 @Composable
 fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
@@ -171,6 +173,7 @@ fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.background)
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp)
         ) {
             Row(
@@ -235,7 +238,8 @@ fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
                     )
                     if (sacredVerse != null) {
                         val vpron = sacredVerse.translit(vlang)
-                        if (vpron.isNotBlank()) {
+                        // Hidden in the Arabic UI: the Arabic original needs no transliteration.
+                        if (vlang != "ar" && vpron.isNotBlank()) {
                             Text(
                                 vpron,
                                 fontStyle = FontStyle.Italic,
@@ -261,7 +265,7 @@ fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
 
             Spacer(Modifier.height(10.dp))
 
-            // Tool buttons: fixed 2-column grid — icon over text, no scrolling.
+            // Tool buttons: 2-column grid — icon over text.
             cards.chunked(2).forEach { rowCards ->
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -305,7 +309,8 @@ fun HomeScreen(navController: NavController, prefs: PrefsRepository) {
                 Spacer(Modifier.height(10.dp))
             }
 
-            Spacer(Modifier.weight(1f))
+            // (weight is unsafe inside a scrollable column; fixed gap instead)
+            Spacer(Modifier.height(12.dp))
 
             // Rotating zikr reminder (footer): trilingual when available.
             val sacredZikr = HOME_ZIKR_I18N.getOrNull(zikrIndex)
@@ -400,9 +405,11 @@ private fun DrawerItem(title: String, icon: Int, onClick: () -> Unit) {
             .clickable { onClick() }
             .padding(vertical = 12.dp)
     ) {
-        Image(
+        // Icon (tinted) instead of Image: dark drawables stay visible in night mode.
+        Icon(
             painter = painterResource(icon),
             contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.size(28.dp)
         )
         Spacer(Modifier.width(12.dp))

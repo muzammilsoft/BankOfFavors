@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -41,6 +41,7 @@ import com.kgsoft.favorsbank.data.AzkarItem
 import com.kgsoft.favorsbank.data.DAY_AZKAR
 import com.kgsoft.favorsbank.data.NIGHT_AZKAR
 import com.kgsoft.favorsbank.data.ZIKR_I18N
+import com.kgsoft.favorsbank.ui.Strings
 import com.kgsoft.favorsbank.ui.components.TrilingualContent
 import com.kgsoft.favorsbank.ui.theme.GreenBright
 import com.kgsoft.favorsbank.ui.theme.GreenPrimary
@@ -63,7 +64,7 @@ fun DaynightAzkarScreen(navController: NavController) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = GreenPrimary)
             }
             Text(
-                "أذكار الصباح والمساء",
+                Strings.azkar,
                 fontFamily = Tajwal,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp
@@ -73,12 +74,12 @@ fun DaynightAzkarScreen(navController: NavController) {
             Tab(
                 selected = tab == 0,
                 onClick = { tab = 0 },
-                text = { Text("أذكار الصباح", fontFamily = Tajwal) }
+                text = { Text(Strings.morningAzkar, fontFamily = Tajwal) }
             )
             Tab(
                 selected = tab == 1,
                 onClick = { tab = 1 },
-                text = { Text("أذكار المساء", fontFamily = Tajwal) }
+                text = { Text(Strings.eveningAzkar, fontFamily = Tajwal) }
             )
         }
         if (tab == 0) AzkarList(DAY_AZKAR) else AzkarList(NIGHT_AZKAR)
@@ -101,43 +102,45 @@ private fun AzkarList(items: List<AzkarItem>) {
                     .fillMaxWidth()
                     .padding(vertical = 6.dp)
             ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                // The counter badge sits at the bottom of the card (tap to
+                // count one repetition) so the text takes its full width.
+                Column(
+                    modifier = Modifier.padding(16.dp)
                 ) {
-                    Column(modifier = Modifier.weight(1f)) {
-                        // If this zikr has i18n data, show the three-line
-                        // display (original + transliteration + meaning);
-                        // otherwise fall back to the Arabic text as before.
-                        // (Leading ﷽ is stripped: it prefixes several items
-                        // but is not part of the lookup key.)
-                        val firstSeg = item.text.trim()
-                            .removePrefix("﷽").trim()
-                            .substringBefore("\n\n").trim()
-                        val sacred = ZIKR_I18N[firstSeg]
-                        if (sacred != null) {
-                            val virtue = item.text.substringAfter("\n\n", "")
-                                .trim().takeIf { it.isNotEmpty() }
-                            TrilingualContent(sacred, count = item.count, virtueAr = virtue)
-                        } else {
-                            Text(item.text, fontFamily = Tajwal, fontSize = 15.sp, lineHeight = 26.sp)
-                        }
-                        Spacer(modifier = Modifier.padding(2.dp))
-                        LinearProgressIndicator(
-                            progress = { (done.toFloat() / item.count).coerceIn(0f, 1f) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(50)),
-                            color = GreenBright,
-                            trackColor = GreenBright.copy(alpha = 0.2f)
-                        )
+                    // If this zikr has i18n data, show the three-line
+                    // display (original + transliteration + meaning);
+                    // otherwise fall back to the Arabic text as before.
+                    // (Leading ﷽ is stripped: it prefixes several items
+                    // but is not part of the lookup key.)
+                    val firstSeg = item.text.trim()
+                        .removePrefix("﷽").trim()
+                        .substringBefore("\n\n").trim()
+                    val sacred = ZIKR_I18N[firstSeg]
+                    if (sacred != null) {
+                        // The virtue is the last segment: some items carry
+                        // the zikr text itself before the virtue note.
+                        val virtue = item.text.substringAfterLast("\n\n", "")
+                            .trim().takeIf { it.isNotEmpty() }
+                        TrilingualContent(sacred, count = item.count, virtueAr = virtue)
+                    } else {
+                        Text(item.text, fontFamily = Tajwal, fontSize = 15.sp, lineHeight = 26.sp)
                     }
-                    Spacer(Modifier.width(12.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    LinearProgressIndicator(
+                        progress = { (done.toFloat() / item.count).coerceIn(0f, 1f) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(50)),
+                        color = GreenBright,
+                        trackColor = GreenBright.copy(alpha = 0.2f)
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
                     // Counter badge: tap to count one repetition (original tapped the badge).
                     androidx.compose.foundation.layout.Box(
                         contentAlignment = Alignment.Center,
                         modifier = Modifier
                             .size(56.dp)
+                            .align(Alignment.CenterHorizontally)
                             .background(GreenBright.copy(alpha = 0.15f), RoundedCornerShape(50))
                             .clip(RoundedCornerShape(50))
                             .clickable {

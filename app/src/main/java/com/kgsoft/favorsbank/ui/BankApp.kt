@@ -4,7 +4,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
@@ -104,6 +107,10 @@ fun BankApp(prefs: PrefsRepository, startRoute: String = Routes.SPLASH) {
         NavHost(
             navController = navController,
             startDestination = startRoute,
+            // Keep every screen below the status bar: no screen handles
+            // window insets itself, and the edge-to-edge status bar is
+            // transparent. (The Surface background stays full-bleed behind it.)
+            modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars),
             enterTransition = { slideInHorizontally { it / 3 } + fadeIn() },
             exitTransition = { fadeOut() },
             popEnterTransition = { fadeIn() },

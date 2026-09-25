@@ -97,6 +97,8 @@ object LangTables {
             "blessedWithCount" to "Qu'Allah vous bénisse ! Vous avez gagné",
             "mayAllahAccept" to "Qu'Allah accepte votre adoration",
             "aboutText" to "Banque des Hasanat est une application islamique qui vous aide à investir votre temps dans les bonnes actions : tâches suggérées avec récompenses et preuves, bilan spirituel quotidien, adhkar du matin et du soir, un tasbih numérique et les horaires de prière. Partagez l'application et faites-en une aumône continue.",
+            "morningAzkar" to "Adhkar du matin",
+            "eveningAzkar" to "Adhkar du soir",
         ),
         "ur" to mapOf(
             "appName" to "بینک آف حسنات",
@@ -192,6 +194,8 @@ object LangTables {
             "blessedWithCount" to "اللہ آپ کو برکت دے! آپ کو ملا",
             "mayAllahAccept" to "اللہ آپ کی عبادت قبول فرمائے",
             "aboutText" to "بینک آف حسنات ایک اسلامی ایپ ہے جو آپ کے وقت کو نیکیوں میں لگانے میں مدد دیتی ہے: ثواب اور دلیل کے ساتھ تجویز کردہ کام، روزانہ محاسبۂ نفس، صبح و شام کے اذکار، ڈیجیٹل تسبیح، اور نماز کے اوقات۔ ایپ شیئر کریں اور اسے اپنے لیے صدقۂ جاریہ بنائیں۔",
+            "morningAzkar" to "صبح کے اذکار",
+            "eveningAzkar" to "شام کے اذکار",
         ),
         "id" to mapOf(
             "appName" to "Bank Hasanat",
@@ -287,6 +291,8 @@ object LangTables {
             "blessedWithCount" to "Barakallahu fiik! Anda mendapatkan",
             "mayAllahAccept" to "Semoga Allah menerima ibadah Anda",
             "aboutText" to "Bank Hasanat adalah aplikasi Islami yang membantu Anda menginvestasikan waktu dalam ketaatan dan mengumpulkan hasanat: tugas dan amalan yang disarankan beserta pahala dan dalilnya, muhasabah harian, zikir pagi dan petang, tasbih digital, dan jadwal salat. Bagikan aplikasi ini dan jadikan sebagai sedekah jariyah dalam timbangan amal Anda.",
+            "morningAzkar" to "Zikir pagi",
+            "eveningAzkar" to "Zikir petang",
         ),
         "fa" to mapOf(
             "appName" to "بانک حسنات",
@@ -382,6 +388,8 @@ object LangTables {
             "blessedWithCount" to "بارک‌الله فیک! شما به دست آوردید",
             "mayAllahAccept" to "خداوند طاعت شما را قبول کند",
             "aboutText" to "بانک حسنات برنامه‌ای اسلامی است که به شما کمک می‌کند وقت خود را در طاعات سرمایه‌گذاری کنید و حسنات جمع کنید: وظایف و اعمال پیشنهادی همراه با اجر و دلیل، محاسبه روزانه نفس، اذکار صبح و شام، تسبیح دیجیتال و اوقات نماز. برنامه را به اشتراک بگذارید و آن را صدقه جاریه در میزان حسنات خود قرار دهید.",
+            "morningAzkar" to "اذکار صبح",
+            "eveningAzkar" to "اذکار شام",
         ),
         "sw" to mapOf(
             "appName" to "Benki ya Hasanat",
@@ -477,6 +485,8 @@ object LangTables {
             "blessedWithCount" to "Mungu akubariki! Umepata",
             "mayAllahAccept" to "Mungu aikubali ibada yako",
             "aboutText" to "Benki ya Hasanat ni programu ya Kiislamu inayokusaidia kuwekeza muda wako katika ibada na kukusanya hasanat: kazi na amali zilizopendekezwa zenye thawabu na dalili, mapitio ya kila siku ya nafsi, adhkar za asubuhi na jioni, tasbihi ya kidijitali, na nyakati za sala. Shiriki programu na uifanye sadaka inayoendelea katika mizani ya hasanat zako.",
+            "morningAzkar" to "Adhkar za asubuhi",
+            "eveningAzkar" to "Adhkar za jioni",
         ),
         "ha" to mapOf(
             "appName" to "Bankin Hasanat",
@@ -572,6 +582,8 @@ object LangTables {
             "blessedWithCount" to "Allah ya albarkace ka! Ka samu",
             "mayAllahAccept" to "Allah ya karɓi ibadarka",
             "aboutText" to "Bankin Hasanat manhaja ce ta Musulunci wadda ke taimaka maka ka zuba lokacinka a cikin biyayya ka tara hasanat: ayyuka da aka ba da shawara tare da lada da hujja, bitar kai na kullum, azkar na safe da yamma, tasbihi na zamani, da lokutan salla. Raba manhajar ka sanya ta sadaka mai gudana a ma'aunin hasanat ɗinka.",
+            "morningAzkar" to "Azkar na safe",
+            "eveningAzkar" to "Azkar na yamma",
         ),
         "bn" to mapOf(
             "appName" to "হাসানাত ব্যাংক",
@@ -667,6 +679,8 @@ object LangTables {
             "blessedWithCount" to "আল্লাহ আপনাকে বরকত দিন! আপনি পেয়েছেন",
             "mayAllahAccept" to "আল্লাহ আপনার ইবাদত কবুল করুন",
             "aboutText" to "হাসানাত ব্যাংক একটি ইসলামিক অ্যাপ যা আপনার সময়কে ইবাদতে বিনিয়োগ করতে ও হাসানাত সংগ্রহ করতে সাহায্য করে: সওয়াব ও প্রমাণসহ প্রস্তাবিত কাজ ও আমল, দৈনিক আত্মসমালোচনা, সকাল-সন্ধ্যার যিকির, ডিজিটাল তাসবীহ এবং নামাজের সময়সূচি। অ্যাপটি শেয়ার করুন এবং এটিকে আপনার হাসানাতের পাল্লায় সদকায়ে জারিয়া বানান।",
+            "morningAzkar" to "সকালের যিকির",
+            "eveningAzkar" to "সন্ধ্যার যিকির",
         ),
         "tr" to mapOf(
             "appName" to "Hasenat Bankası",
@@ -762,6 +776,8 @@ object LangTables {
             "blessedWithCount" to "Allah razı olsun! Kazandınız:",
             "mayAllahAccept" to "Allah ibadetinizi kabul etsin",
             "aboutText" to "Hasenat Bankası, vaktinizi ibadete yatırmanıza ve hasenat toplamanıza yardımcı olan İslami bir uygulamadır: sevap ve delilleriyle önerilen görev ve ameller, günlük nefis muhasebesi, sabah ve akşam zikirleri, dijital tesbih ve namaz vakitleri. Uygulamayı paylaşın ve hasenat terazinize sadaka-i cariye olarak ekleyin.",
+            "morningAzkar" to "Sabah zikirleri",
+            "eveningAzkar" to "Akşam zikirleri",
         ),
     )
 
