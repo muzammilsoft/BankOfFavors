@@ -167,6 +167,13 @@ object Strings {
     )
     val openSettings get() = s("openSettings", "فتح الإعدادات", "Open settings")
     val loadingPrayerTimes get() = s("loadingPrayerTimes", "جاري تحميل مواقيت الصلاة...", "Loading prayer times...")
+    val fetchingPrayerTimes get() = s("fetchingPrayerTimes", "جاري جلب مواقيت الصلاة...", "Fetching prayer times...")
+    val prayerTimesUpdated get() = s("prayerTimesUpdated", "تم تحديث مواقيت الصلاة", "Prayer times updated")
+    val prayerTimesFailed get() = s("prayerTimesFailed",
+        "تعذر جلب المواقيت. تحقق من الاتصال بالإنترنت",
+        "Couldn't fetch prayer times. Check your internet connection"
+    )
+    val version get() = s("version", "الإصدار", "Version")
     val searchingCities get() = s("searchingCities", "جاري البحث…", "Searching…")
 
     // prayer times settings (repair + manual times)

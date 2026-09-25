@@ -95,9 +95,13 @@ import java.util.Locale
  *
  * Times come from the AlAdhan API (https://aladhan.com/prayer-times-api)
  * for the user's location. The location is asked for once and saved;
- * cached times are shown instantly and refreshed silently whenever the
- * internet is available — no error messages are ever shown.
+ * cached times are shown instantly and refreshed whenever the internet is
+ * available. Every API request shows a waiting indicator, followed by a
+ * success or error message under the city row.
  */
+
+/** Status of the last prayer-times API request, shown under the city row. */
+private enum class FetchStatus { IDLE, LOADING, SUCCESS, ERROR }
 @Composable
 fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
     val context = LocalContext.current
@@ -115,13 +119,16 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
     var citySearchJob by remember { mutableStateOf<kotlinx.coroutines.Job?>(null) }
     var savedCityLabel by remember { mutableStateOf<String?>(null) }
     var isManual by remember { mutableStateOf(false) }
+    var fetchStatus by remember { mutableStateOf(FetchStatus.IDLE) }
 
     /** Fetch timings for explicit coordinates and update state/cache. */
     suspend fun fetchFor(lat: Double, lng: Double) {
         if (!isNetworkAvailable(context)) {
             DiagLog.d("prayer-ui", "fetchFor: no network, keeping cache")
-            return // silent: keep showing cache
+            fetchStatus = FetchStatus.ERROR
+            return
         }
+        fetchStatus = FetchStatus.LOADING
         val today = SimpleDateFormat("dd-MM-yyyy", Locale.US).format(Date())
         // Calculation method follows the UI language's region
         // (Egypt for Arabs, Karachi for Urdu/Bengali, Diyanet for Turkish, ...).
@@ -131,18 +138,21 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
             prefs.cachePrayerTimes(today, fresh.toJsonString())
             DiagLog.d("prayer-ui", "fetchFor: ok, cached for $today")
             prayers = fresh
+            fetchStatus = FetchStatus.SUCCESS
         } else {
             DiagLog.d("prayer-ui", "fetchFor: api returned null, keeping cache")
+            fetchStatus = FetchStatus.ERROR
         }
-        // on failure: silent, keep cache
     }
 
     /** Fetch timings for a city + country (no GPS) and update state/cache. */
     suspend fun fetchForCity(cityEn: String, countryEn: String) {
         if (!isNetworkAvailable(context)) {
             DiagLog.d("prayer-ui", "fetchForCity: no network, keeping cache")
-            return // silent: keep showing cache
+            fetchStatus = FetchStatus.ERROR
+            return
         }
+        fetchStatus = FetchStatus.LOADING
         val today = SimpleDateFormat("dd-MM-yyyy", Locale.US).format(Date())
         val method = APP_LANGS.find { it.code == Strings.langCode }?.prayerMethod ?: 5
         val fresh = PrayerApi.fetchTimingsByCity(cityEn, countryEn, today, method)
@@ -150,8 +160,10 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
             prefs.cachePrayerTimes(today, fresh.toJsonString())
             DiagLog.d("prayer-ui", "fetchForCity: ok, cached for $today")
             prayers = fresh
+            fetchStatus = FetchStatus.SUCCESS
         } else {
             DiagLog.d("prayer-ui", "fetchForCity: api returned null, keeping cache")
+            fetchStatus = FetchStatus.ERROR
         }
     }
 
@@ -427,6 +439,32 @@ fun SalatTimesScreen(navController: NavController, prefs: PrefsRepository) {
             }
 
             Spacer(Modifier.height(8.dp))
+
+            // API request status: waiting indicator while fetching, then a
+            // success or error message.
+            if (fetchStatus != FetchStatus.IDLE) {
+                val statusText = when (fetchStatus) {
+                    FetchStatus.LOADING -> Strings.fetchingPrayerTimes
+                    FetchStatus.SUCCESS -> Strings.prayerTimesUpdated
+                    FetchStatus.ERROR -> Strings.prayerTimesFailed
+                    FetchStatus.IDLE -> ""
+                }
+                val statusColor = when (fetchStatus) {
+                    FetchStatus.SUCCESS -> GreenPrimary
+                    FetchStatus.ERROR -> MaterialTheme.colorScheme.error
+                    else -> MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+                }
+                Text(
+                    statusText,
+                    fontFamily = Tajwal,
+                    fontSize = 13.sp,
+                    textAlign = TextAlign.Center,
+                    color = statusColor,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp)
+                )
+            }
 
             if (isLoading && prayers == null) {
                 // Shimmer placeholders while the location fix / API request runs.

@@ -99,6 +99,10 @@ object LangTables {
             "aboutText" to "Banque des Hasanat est une application islamique qui vous aide à investir votre temps dans les bonnes actions : tâches suggérées avec récompenses et preuves, bilan spirituel quotidien, adhkar du matin et du soir, un tasbih numérique et les horaires de prière. Partagez l'application et faites-en une aumône continue.",
             "morningAzkar" to "Adhkar du matin",
             "eveningAzkar" to "Adhkar du soir",
+            "fetchingPrayerTimes" to "Récupération des horaires de prière...",
+            "prayerTimesUpdated" to "Horaires de prière mis à jour",
+            "prayerTimesFailed" to "Impossible de récupérer les horaires. Vérifiez votre connexion Internet.",
+            "version" to "Version",
         ),
         "ur" to mapOf(
             "appName" to "بینک آف حسنات",
@@ -196,6 +200,10 @@ object LangTables {
             "aboutText" to "بینک آف حسنات ایک اسلامی ایپ ہے جو آپ کے وقت کو نیکیوں میں لگانے میں مدد دیتی ہے: ثواب اور دلیل کے ساتھ تجویز کردہ کام، روزانہ محاسبۂ نفس، صبح و شام کے اذکار، ڈیجیٹل تسبیح، اور نماز کے اوقات۔ ایپ شیئر کریں اور اسے اپنے لیے صدقۂ جاریہ بنائیں۔",
             "morningAzkar" to "صبح کے اذکار",
             "eveningAzkar" to "شام کے اذکار",
+            "fetchingPrayerTimes" to "نماز کے اوقات حاصل کیے جا رہے ہیں...",
+            "prayerTimesUpdated" to "نماز کے اوقات اپڈیٹ ہو گئے",
+            "prayerTimesFailed" to "اوقات حاصل نہیں ہو سکے۔ انٹرنیٹ کنکشن چیک کریں۔",
+            "version" to "ورژن",
         ),
         "id" to mapOf(
             "appName" to "Bank Hasanat",
@@ -293,6 +301,10 @@ object LangTables {
             "aboutText" to "Bank Hasanat adalah aplikasi Islami yang membantu Anda menginvestasikan waktu dalam ketaatan dan mengumpulkan hasanat: tugas dan amalan yang disarankan beserta pahala dan dalilnya, muhasabah harian, zikir pagi dan petang, tasbih digital, dan jadwal salat. Bagikan aplikasi ini dan jadikan sebagai sedekah jariyah dalam timbangan amal Anda.",
             "morningAzkar" to "Zikir pagi",
             "eveningAzkar" to "Zikir petang",
+            "fetchingPrayerTimes" to "Mengambil jadwal salat...",
+            "prayerTimesUpdated" to "Jadwal salat diperbarui",
+            "prayerTimesFailed" to "Gagal mengambil jadwal. Periksa koneksi internet Anda.",
+            "version" to "Versi",
         ),
         "fa" to mapOf(
             "appName" to "بانک حسنات",
@@ -390,6 +402,10 @@ object LangTables {
             "aboutText" to "بانک حسنات برنامه‌ای اسلامی است که به شما کمک می‌کند وقت خود را در طاعات سرمایه‌گذاری کنید و حسنات جمع کنید: وظایف و اعمال پیشنهادی همراه با اجر و دلیل، محاسبه روزانه نفس، اذکار صبح و شام، تسبیح دیجیتال و اوقات نماز. برنامه را به اشتراک بگذارید و آن را صدقه جاریه در میزان حسنات خود قرار دهید.",
             "morningAzkar" to "اذکار صبح",
             "eveningAzkar" to "اذکار شام",
+            "fetchingPrayerTimes" to "در حال دریافت اوقات نماز...",
+            "prayerTimesUpdated" to "اوقات نماز به‌روز شد",
+            "prayerTimesFailed" to "دریافت اوقات ممکن نشد. اتصال اینترنت را بررسی کنید.",
+            "version" to "نسخه",
         ),
         "sw" to mapOf(
             "appName" to "Benki ya Hasanat",
@@ -487,6 +503,10 @@ object LangTables {
             "aboutText" to "Benki ya Hasanat ni programu ya Kiislamu inayokusaidia kuwekeza muda wako katika ibada na kukusanya hasanat: kazi na amali zilizopendekezwa zenye thawabu na dalili, mapitio ya kila siku ya nafsi, adhkar za asubuhi na jioni, tasbihi ya kidijitali, na nyakati za sala. Shiriki programu na uifanye sadaka inayoendelea katika mizani ya hasanat zako.",
             "morningAzkar" to "Adhkar za asubuhi",
             "eveningAzkar" to "Adhkar za jioni",
+            "fetchingPrayerTimes" to "Inapata nyakati za sala...",
+            "prayerTimesUpdated" to "Nyakati za sala zimesasishwa",
+            "prayerTimesFailed" to "Imeshindwa kupata nyakati. Angalia muunganisho wako wa intaneti.",
+            "version" to "Toleo",
         ),
         "ha" to mapOf(
             "appName" to "Bankin Hasanat",
@@ -584,6 +604,10 @@ object LangTables {
             "aboutText" to "Bankin Hasanat manhaja ce ta Musulunci wadda ke taimaka maka ka zuba lokacinka a cikin biyayya ka tara hasanat: ayyuka da aka ba da shawara tare da lada da hujja, bitar kai na kullum, azkar na safe da yamma, tasbihi na zamani, da lokutan salla. Raba manhajar ka sanya ta sadaka mai gudana a ma'aunin hasanat ɗinka.",
             "morningAzkar" to "Azkar na safe",
             "eveningAzkar" to "Azkar na yamma",
+            "fetchingPrayerTimes" to "Ana samo lokutan salla...",
+            "prayerTimesUpdated" to "An sabunta lokutan salla",
+            "prayerTimesFailed" to "Ba a iya samo lokutan ba. Duba haɗin intanet ɗinka.",
+            "version" to "Sigar",
         ),
         "bn" to mapOf(
             "appName" to "হাসানাত ব্যাংক",
@@ -681,6 +705,10 @@ object LangTables {
             "aboutText" to "হাসানাত ব্যাংক একটি ইসলামিক অ্যাপ যা আপনার সময়কে ইবাদতে বিনিয়োগ করতে ও হাসানাত সংগ্রহ করতে সাহায্য করে: সওয়াব ও প্রমাণসহ প্রস্তাবিত কাজ ও আমল, দৈনিক আত্মসমালোচনা, সকাল-সন্ধ্যার যিকির, ডিজিটাল তাসবীহ এবং নামাজের সময়সূচি। অ্যাপটি শেয়ার করুন এবং এটিকে আপনার হাসানাতের পাল্লায় সদকায়ে জারিয়া বানান।",
             "morningAzkar" to "সকালের যিকির",
             "eveningAzkar" to "সন্ধ্যার যিকির",
+            "fetchingPrayerTimes" to "নামাজের সময় আনা হচ্ছে...",
+            "prayerTimesUpdated" to "নামাজের সময় হালনাগাদ হয়েছে",
+            "prayerTimesFailed" to "সময় আনা যায়নি। আপনার ইন্টারনেট সংযোগ পরীক্ষা করুন।",
+            "version" to "সংস্করণ",
         ),
         "tr" to mapOf(
             "appName" to "Hasenat Bankası",
@@ -778,6 +806,10 @@ object LangTables {
             "aboutText" to "Hasenat Bankası, vaktinizi ibadete yatırmanıza ve hasenat toplamanıza yardımcı olan İslami bir uygulamadır: sevap ve delilleriyle önerilen görev ve ameller, günlük nefis muhasebesi, sabah ve akşam zikirleri, dijital tesbih ve namaz vakitleri. Uygulamayı paylaşın ve hasenat terazinize sadaka-i cariye olarak ekleyin.",
             "morningAzkar" to "Sabah zikirleri",
             "eveningAzkar" to "Akşam zikirleri",
+            "fetchingPrayerTimes" to "Namaz vakitleri alınıyor...",
+            "prayerTimesUpdated" to "Namaz vakitleri güncellendi",
+            "prayerTimesFailed" to "Vakitler alınamadı. İnternet bağlantınızı kontrol edin.",
+            "version" to "Sürüm",
         ),
     )
 

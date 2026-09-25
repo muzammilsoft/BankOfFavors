@@ -53,6 +53,16 @@ import com.kgsoft.favorsbank.util.openUrl
 import com.kgsoft.favorsbank.util.shareOwnApk
 
 /**
+ * Reads the app's versionName from the package manager, so the About
+ * screen always shows the real version after any version bump.
+ */
+@Suppress("DEPRECATION")
+private fun getAppVersionName(context: android.content.Context): String? =
+    runCatching {
+        context.packageManager.getPackageInfo(context.packageName, 0).versionName
+    }.getOrNull()
+
+/**
  * About screen: app description dialog, policy link, update check, donate
  * panel and contact link. Mirrors AboutActivity (also fixes the dead
  * Telegram link, which the original built but never launched).
@@ -63,6 +73,8 @@ fun AboutScreen(navController: NavController) {
     var showAbout by remember { mutableStateOf(false) }
     var showDonate by remember { mutableStateOf(false) }
     var showSources by remember { mutableStateOf(false) }
+    // Real app version: follows versionName from the Gradle config automatically.
+    val versionName = remember { getAppVersionName(context) }
 
     Column(modifier = Modifier.fillMaxSize()) {
         Row(
@@ -96,7 +108,7 @@ fun AboutScreen(navController: NavController) {
                 color = GreenPrimary
             )
             Text(
-                "الإصدار 1.0",
+                "${Strings.version} ${versionName ?: "–"}",
                 fontFamily = Tajwal,
                 fontSize = 14.sp,
                 color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f)
@@ -216,9 +228,11 @@ private fun AboutCard(title: String, icon: Int, onClick: () -> Unit) {
             verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.padding(18.dp)
         ) {
-            Image(
-                painterResource(icon),
+            // Icon (tinted) instead of Image: dark drawables stay visible in night mode.
+            Icon(
+                painter = painterResource(icon),
                 contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(30.dp)
             )
             Spacer(Modifier.width(14.dp))
