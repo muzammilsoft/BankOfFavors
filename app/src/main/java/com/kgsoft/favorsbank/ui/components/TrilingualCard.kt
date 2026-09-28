@@ -76,7 +76,7 @@ fun TrilingualContent(
             fontWeight = FontWeight.Bold,
             fontSize = 18.sp,
             lineHeight = 30.sp,
-            textAlign = TextAlign.End,
+            textAlign = TextAlign.Center,
             modifier = Modifier.fillMaxWidth()
         )
         // 2 — pronunciation in the user's language
@@ -87,6 +87,7 @@ fun TrilingualContent(
                 fontStyle = FontStyle.Italic,
                 fontSize = 14.sp,
                 lineHeight = 22.sp,
+                textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.65f),
                 modifier = Modifier.fillMaxWidth()
             )
@@ -97,6 +98,7 @@ fun TrilingualContent(
                 text = s.meaning(lang),
                 fontSize = 15.sp,
                 lineHeight = 26.sp,
+                textAlign = TextAlign.Center,
                 color = GreenPrimary,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -112,7 +114,7 @@ fun TrilingualContent(
                 fontFamily = Tajwal,
                 fontSize = 13.sp,
                 lineHeight = 22.sp,
-                textAlign = TextAlign.End,
+                textAlign = TextAlign.Center,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.55f),
                 modifier = Modifier.fillMaxWidth()
             )
